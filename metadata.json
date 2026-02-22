@@ -1,0 +1,5 @@
+{
+  "name": "Desafio Bíblico",
+  "description": "Aplicativo de gincana bíblica com geração de perguntas por IA, placar em tempo real e modo telão.",
+  "requestFramePermissions": []
+}
