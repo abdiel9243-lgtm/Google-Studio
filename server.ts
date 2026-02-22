@@ -210,6 +210,43 @@ async function startServer() {
     }
   });
 
+  app.get('/api/matches', (req, res) => {
+    const matches = db.prepare(`
+      SELECT m.*, 
+        (SELECT json_group_array(json_object('name', t.name, 'score', mt.score, 'color', t.color))
+         FROM match_teams mt 
+         JOIN teams t ON mt.team_id = t.id 
+         WHERE mt.match_id = m.id) as teams_json,
+        (SELECT AVG(response_time) FROM match_questions WHERE match_id = m.id) as avg_response_time
+      FROM matches m 
+      ORDER BY created_at DESC
+    `).all();
+    
+    // Parse the JSON string for teams
+    const matchesWithParsedTeams = matches.map((match: any) => ({
+      ...match,
+      teams: JSON.parse(match.teams_json || '[]'),
+      avg_response_time: match.avg_response_time || 0
+    }));
+
+    res.json(matchesWithParsedTeams);
+  });
+
+  app.delete('/api/matches/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+      const deleteMatch = db.transaction(() => {
+        db.prepare('DELETE FROM match_questions WHERE match_id = ?').run(id);
+        db.prepare('DELETE FROM match_teams WHERE match_id = ?').run(id);
+        db.prepare('DELETE FROM matches WHERE id = ?').run(id);
+      });
+      deleteMatch();
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get('/api/matches/:id', (req, res) => {
     const { id } = req.params;
     const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(id);

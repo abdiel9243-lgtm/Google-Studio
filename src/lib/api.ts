@@ -77,6 +77,15 @@ export const api = {
     return res.json();
   },
 
+  getMatches: async () => {
+    const res = await fetch('/api/matches');
+    return res.json() as Promise<(Match & { avg_response_time: number })[]>;
+  },
+
+  deleteMatch: async (id: string) => {
+    await fetch(`/api/matches/${id}`, { method: 'DELETE' });
+  },
+
   getMatch: async (id: string) => {
     const res = await fetch(`/api/matches/${id}`);
     return res.json() as Promise<Match>;

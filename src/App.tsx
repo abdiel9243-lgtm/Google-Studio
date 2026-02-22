@@ -9,6 +9,7 @@ import Results from './pages/Results';
 import Questions from './pages/Questions';
 import Settings from './pages/Settings';
 import Instructions from './pages/Instructions';
+import History from './pages/History';
 import Layout from './components/Layout';
 import Splash from './components/Splash';
 
@@ -25,7 +26,7 @@ function AnimatedRoutes() {
           <Route path="results/:id" element={<Results />} />
           <Route path="questions" element={<Questions />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="history" element={<Results />} />
+          <Route path="history" element={<History />} />
           <Route path="instructions" element={<Instructions />} />
         </Route>
       </Routes>

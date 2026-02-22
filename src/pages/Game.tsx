@@ -159,18 +159,33 @@ export default function Game() {
           </div>
           
           <div className="flex justify-center gap-4">
-            {match.teams.map((team, idx) => (
-              <div 
-                key={team.id}
-                className={clsx(
-                  "flex flex-col items-center justify-center w-32 h-20 rounded-2xl transition-all border-2",
-                  idx === 0 ? "bg-indigo-600 text-white border-indigo-600" : "bg-red-50 text-red-600 border-red-100"
-                )}
-              >
-                <span className="text-sm font-medium opacity-90">{team.name}</span>
-                <span className="text-2xl font-bold">{team.score} pts</span>
-              </div>
-            ))}
+            {match.teams.map((team, idx) => {
+              const isActive = idx === turnIndex;
+              return (
+                <motion.div 
+                  key={team.id}
+                  animate={{ 
+                    scale: isActive ? 1.05 : 1,
+                    opacity: isActive ? 1 : 0.7
+                  }}
+                  className={clsx(
+                    "flex flex-col items-center justify-center w-32 h-20 rounded-2xl transition-colors border-2 relative overflow-hidden",
+                    isActive 
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-md" 
+                      : "bg-white text-slate-600 border-slate-200"
+                  )}
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="active-indicator"
+                      className="absolute inset-0 bg-white/10"
+                    />
+                  )}
+                  <span className="text-sm font-medium opacity-90">{team.name}</span>
+                  <span className="text-2xl font-bold">{team.score} pts</span>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
@@ -199,9 +214,10 @@ export default function Game() {
             ) : (
               <motion.div
                 key={currentQuestion.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="space-y-6"
               >
                 {/* Metadata Badges */}
