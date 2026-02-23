@@ -409,13 +409,24 @@ async function startServer() {
   app.post('/api/questions/generate', async (req, res) => {
     try {
       const prompt = `
-        Generate 20 unique biblical questions for a quiz game in Portuguese (Brazil).
-        Focus on diverse categories: Old Testament, New Testament, Characters, Miracles, Parables, Books.
-        You can also use specific book names as categories if the question is specific to that book: Genesis, Exodus, Psalms, Proverbs, Isaiah, Matthew, Mark, Luke, John, Revelation.
-        Vary difficulty: Easy, Medium, Hard.
-        Type: ALWAYS "multiple_choice".
-        Each question MUST have 4 options.
+        Generate 20 unique and engaging biblical questions for a quiz game in Portuguese (Brazil).
         
+        Guidelines for diversity and engagement:
+        - Avoid very common or repetitive questions (e.g., "Who built the ark?").
+        - Use different question formats:
+          - "Who said this phrase: '...'"
+          - "Complete the verse: '...'"
+          - "Which of these events happened first?"
+          - "What was the name of..."
+          - "Where did this event take place?"
+        - For 'Hard' difficulty, use less known details or minor characters.
+        - Ensure options are plausible but only one is strictly correct.
+        
+        Categories:
+        - General: Old Testament, New Testament, Characters, Miracles, Parables, Books.
+        - Specific Books: Genesis, Exodus, Psalms, Proverbs, Isaiah, Matthew, Mark, Luke, John, Revelation.
+        
+        Schema:
         Return a JSON array with this schema:
         [
           {
