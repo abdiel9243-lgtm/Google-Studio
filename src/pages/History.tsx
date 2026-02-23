@@ -19,7 +19,9 @@ export default function History() {
   const loadMatches = async () => {
     setLoading(true);
     const data = await api.getMatches();
-    setMatches(data);
+    // Add default avg_response_time since it's not in the base Match type anymore
+    const matchesWithDetails = data.map(m => ({ ...m, avg_response_time: 0 }));
+    setMatches(matchesWithDetails);
     setLoading(false);
   };
 
@@ -146,7 +148,16 @@ export default function History() {
                                 </div>
                                 <span className="font-medium text-slate-700">{team.name}</span>
                               </div>
-                              <span className="font-bold text-slate-800 text-lg">{team.score} pts</span>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <p className="font-bold text-slate-800 text-lg leading-none">{team.score} pts</p>
+                                  {team.skips_used > 0 && (
+                                    <p className="text-[9px] text-slate-400 font-medium uppercase mt-1">
+                                      {team.skips_used} {team.skips_used === 1 ? 'pulo' : 'pulos'}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>

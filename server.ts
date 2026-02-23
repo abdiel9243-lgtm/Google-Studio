@@ -43,6 +43,7 @@ db.exec(`
     target_score INTEGER,
     max_rounds INTEGER,
     time_limit INTEGER,
+    skips_allowed INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -51,6 +52,7 @@ db.exec(`
     match_id TEXT NOT NULL,
     team_id TEXT NOT NULL,
     score INTEGER DEFAULT 0,
+    skips_used INTEGER DEFAULT 0,
     FOREIGN KEY(match_id) REFERENCES matches(id),
     FOREIGN KEY(team_id) REFERENCES teams(id)
   );
@@ -68,6 +70,30 @@ db.exec(`
     FOREIGN KEY(answered_by_team_id) REFERENCES teams(id)
   );
 `);
+
+// Migration: Add skips_allowed to matches if it doesn't exist
+try {
+  db.prepare("SELECT skips_allowed FROM matches LIMIT 1").get();
+} catch (e) {
+  console.log("Migrating: Adding skips_allowed to matches table");
+  db.exec("ALTER TABLE matches ADD COLUMN skips_allowed INTEGER DEFAULT 0");
+}
+
+// Migration: Add skips_used to match_teams if it doesn't exist
+try {
+  db.prepare("SELECT skips_used FROM match_teams LIMIT 1").get();
+} catch (e) {
+  console.log("Migrating: Adding skips_used to match_teams table");
+  db.exec("ALTER TABLE match_teams ADD COLUMN skips_used INTEGER DEFAULT 0");
+}
+
+// Migration: Add category_filter to matches if it doesn't exist
+try {
+  db.prepare("SELECT category_filter FROM matches LIMIT 1").get();
+} catch (e) {
+  console.log("Migrating: Adding category_filter to matches table");
+  db.exec("ALTER TABLE matches ADD COLUMN category_filter TEXT");
+}
 
 import { initialQuestions } from './src/data/initialQuestions.ts';
 
@@ -109,7 +135,7 @@ async function startServer() {
   
   // Questions
   app.get('/api/questions', (req, res) => {
-    const { limit, category, difficulty } = req.query;
+    const { limit, category, difficulty, search } = req.query;
     let query = 'SELECT * FROM questions WHERE 1=1';
     const params: any[] = [];
 
@@ -121,8 +147,12 @@ async function startServer() {
       query += ' AND difficulty = ?';
       params.push(difficulty);
     }
+    if (search) {
+      query += ' AND text LIKE ?';
+      params.push(`%${search}%`);
+    }
     
-    query += ' ORDER BY RANDOM()';
+    query += ' ORDER BY created_at DESC'; // Changed from RANDOM() to stable sort for management
 
     if (limit) {
       query += ' LIMIT ?';
@@ -147,6 +177,31 @@ async function startServer() {
     }
   });
 
+  app.put('/api/questions/:id', (req, res) => {
+    const { id } = req.params;
+    const { text, type, difficulty, category, correct_answer, options, reference } = req.body;
+    try {
+      db.prepare(`
+        UPDATE questions 
+        SET text = ?, type = ?, difficulty = ?, category = ?, correct_answer = ?, options = ?, reference = ?
+        WHERE id = ?
+      `).run(text, type, difficulty, category, correct_answer, JSON.stringify(options), reference, id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/questions/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+      db.prepare('DELETE FROM questions WHERE id = ?').run(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Teams
   app.get('/api/teams', (req, res) => {
     const teams = db.prepare('SELECT * FROM teams ORDER BY created_at DESC').all();
@@ -164,6 +219,17 @@ async function startServer() {
     }
   });
 
+  app.put('/api/teams/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, color } = req.body;
+    try {
+      db.prepare('UPDATE teams SET name = ?, color = ? WHERE id = ?').run(name, color, id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.delete('/api/teams/:id', (req, res) => {
     const { id } = req.params;
     try {
@@ -176,14 +242,14 @@ async function startServer() {
 
   // Matches
   app.post('/api/matches', (req, res) => {
-    const { mode, target_score, max_rounds, time_limit, teams } = req.body; // teams is array of team IDs
+    const { mode, target_score, max_rounds, time_limit, skips_allowed, teams, category_filter } = req.body; // teams is array of team IDs
     const id = uuidv4();
     
     const createMatch = db.transaction(() => {
       db.prepare(`
-        INSERT INTO matches (id, mode, status, current_round, target_score, max_rounds, time_limit)
-        VALUES (?, ?, 'active', 1, ?, ?, ?)
-      `).run(id, mode, target_score, max_rounds, time_limit);
+        INSERT INTO matches (id, mode, status, current_round, target_score, max_rounds, time_limit, skips_allowed, category_filter)
+        VALUES (?, ?, 'active', 1, ?, ?, ?, ?, ?)
+      `).run(id, mode, target_score, max_rounds, time_limit, skips_allowed || 0, category_filter || null);
 
       const insertTeam = db.prepare('INSERT INTO match_teams (id, match_id, team_id) VALUES (?, ?, ?)');
       for (const teamId of teams) {
@@ -253,7 +319,7 @@ async function startServer() {
     if (!match) return res.status(404).json({ error: 'Match not found' });
 
     const teams = db.prepare(`
-      SELECT t.*, mt.score, mt.id as match_team_id 
+      SELECT t.*, mt.score, mt.skips_used, mt.id as match_team_id 
       FROM match_teams mt 
       JOIN teams t ON mt.team_id = t.id 
       WHERE mt.match_id = ?
@@ -264,9 +330,12 @@ async function startServer() {
 
   app.post('/api/matches/:id/score', (req, res) => {
     const { id } = req.params;
-    const { team_id, points } = req.body;
+    const { team_id, points, skip } = req.body;
     
     try {
+      if (skip) {
+        db.prepare('UPDATE match_teams SET skips_used = skips_used + 1 WHERE match_id = ? AND team_id = ?').run(id, team_id);
+      }
       db.prepare('UPDATE match_teams SET score = score + ? WHERE match_id = ? AND team_id = ?').run(points, id, team_id);
       res.json({ success: true });
     } catch (error: any) {
@@ -288,16 +357,33 @@ async function startServer() {
   app.get('/api/matches/:id/next-question', (req, res) => {
     const { id } = req.params;
     
+    // Get match details to check for category filter
+    const match = db.prepare('SELECT category_filter FROM matches WHERE id = ?').get(id) as { category_filter?: string };
+
     // Get questions already asked in this match
     const askedQuestions = db.prepare('SELECT question_id FROM match_questions WHERE match_id = ?').all(id) as { question_id: string }[];
     const askedIds = askedQuestions.map(q => q.question_id);
 
     // Get a random question not in the list
-    let query = 'SELECT * FROM questions';
+    let query = 'SELECT * FROM questions WHERE 1=1';
     const params: any[] = [];
+
+    if (match?.category_filter) {
+      // Check if it's a standard category or a book name
+      const standardCategories = ['old_testament', 'new_testament', 'characters', 'miracles', 'parables', 'books'];
+      
+      if (standardCategories.includes(match.category_filter)) {
+        query += ' AND category = ?';
+        params.push(match.category_filter);
+      } else {
+        // It's likely a book name, check category OR reference
+        query += ' AND (category = ? OR reference LIKE ?)';
+        params.push(match.category_filter, `${match.category_filter}%`);
+      }
+    }
     
     if (askedIds.length > 0) {
-      query += ` WHERE id NOT IN (${askedIds.map(() => '?').join(',')})`;
+      query += ` AND id NOT IN (${askedIds.map(() => '?').join(',')})`;
       params.push(...askedIds);
     }
     
@@ -309,6 +395,13 @@ async function startServer() {
       return res.status(404).json({ error: 'No more questions available' });
     }
     
+    // Mark question as asked for this match
+    try {
+      db.prepare('INSERT INTO match_questions (id, match_id, question_id) VALUES (?, ?, ?)').run(uuidv4(), id, question.id);
+    } catch (e) {
+      console.error('Error marking question as asked:', e);
+    }
+    
     res.json(question);
   });
 
@@ -318,6 +411,7 @@ async function startServer() {
       const prompt = `
         Generate 20 unique biblical questions for a quiz game in Portuguese (Brazil).
         Focus on diverse categories: Old Testament, New Testament, Characters, Miracles, Parables, Books.
+        You can also use specific book names as categories if the question is specific to that book: Genesis, Exodus, Psalms, Proverbs, Isaiah, Matthew, Mark, Luke, John, Revelation.
         Vary difficulty: Easy, Medium, Hard.
         Type: ALWAYS "multiple_choice".
         Each question MUST have 4 options.
@@ -328,7 +422,7 @@ async function startServer() {
             "text": "Question text",
             "type": "multiple_choice",
             "difficulty": "easy" | "medium" | "hard",
-            "category": "old_testament" | "new_testament" | "characters" | "miracles" | "parables" | "books",
+            "category": "old_testament" | "new_testament" | "characters" | "miracles" | "parables" | "books" | "Genesis" | "Exodus" | "Psalms" | "Proverbs" | "Isaiah" | "Matthew" | "Mark" | "Luke" | "John" | "Revelation",
             "correct_answer": "Answer string",
             "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
             "reference": "Book Chapter:Verse"
@@ -352,23 +446,35 @@ async function startServer() {
       
       const questions = JSON.parse(jsonMatch[1] || jsonMatch[0]);
       
+      const checkSimilarity = db.prepare('SELECT text FROM questions');
+      const existingQuestions = checkSimilarity.all() as { text: string }[];
+
       const insert = db.prepare(`
         INSERT INTO questions (id, text, type, difficulty, category, correct_answer, options, reference)
         VALUES (@id, @text, @type, @difficulty, @category, @correct_answer, @options, @reference)
       `);
 
+      let addedCount = 0;
       const insertMany = db.transaction((qs) => {
         for (const q of qs) {
-          insert.run({
-            ...q,
-            id: uuidv4(),
-            options: q.options ? JSON.stringify(q.options) : null
-          });
+          // Basic similarity check: exact match or very similar
+          const isDuplicate = existingQuestions.some(ex => 
+            ex.text.toLowerCase().trim() === q.text.toLowerCase().trim()
+          );
+
+          if (!isDuplicate && q.reference && q.text) {
+            insert.run({
+              ...q,
+              id: uuidv4(),
+              options: q.options ? JSON.stringify(q.options) : null
+            });
+            addedCount++;
+          }
         }
       });
 
       insertMany(questions);
-      res.json({ success: true, count: questions.length });
+      res.json({ success: true, count: addedCount });
     } catch (error: any) {
       console.error('AI Generation Error:', error);
       res.status(500).json({ error: error.message });

@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  MinusCircle, 
   Volume2, 
-  Timer, 
-  Hourglass, 
   Sparkles, 
   Key, 
   Database, 
   HelpCircle, 
   Info,
   Download,
-  Upload
+  Upload,
+  Music
 } from 'lucide-react';
 import { api } from '../lib/api';
 import PageTransition from '../components/PageTransition';
@@ -34,17 +32,23 @@ function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 export default function Settings() {
   const [stats, setStats] = useState({ questions: 0 });
-  const [penaltyEnabled, setPenaltyEnabled] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [timeLimit, setTimeLimit] = useState(30);
+  const [soundEffectsEnabled, setSoundEffectsEnabled] = useState(() => localStorage.getItem('soundEnabled') !== 'false');
+  const [musicEnabled, setMusicEnabled] = useState(() => localStorage.getItem('musicEnabled') !== 'false');
+
+  useEffect(() => {
+    localStorage.setItem('soundEnabled', soundEffectsEnabled.toString());
+  }, [soundEffectsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('musicEnabled', musicEnabled.toString());
+  }, [musicEnabled]);
 
   useEffect(() => {
     api.getStats().then(data => setStats({ questions: data.questions }));
   }, []);
 
   const handleBackup = async () => {
-    const res = await fetch('/api/backup');
-    const data = await res.json();
+    const data = await api.getBackupData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -63,19 +67,11 @@ export default function Settings() {
     reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        const res = await fetch('/api/restore', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        if (res.ok) {
-          alert('Backup restaurado com sucesso!');
-          window.location.reload();
-        } else {
-          alert('Erro ao restaurar backup.');
-        }
+        await api.restoreBackupData(data);
+        alert('Backup restaurado com sucesso!');
+        window.location.reload();
       } catch (error) {
-        alert('Arquivo inválido.');
+        alert('Arquivo inválido ou erro ao restaurar.');
       }
     };
     reader.readAsText(file);
@@ -94,69 +90,37 @@ export default function Settings() {
 
         <div className="p-4 space-y-8 max-w-md mx-auto">
           
-          {/* Game Settings */}
+          {/* Audio Settings */}
           <section className="space-y-3">
             <div className="flex items-center gap-2 text-indigo-600 font-semibold">
-              <FlagIcon />
-              <span>Configurações do Jogo</span>
+              <Volume2 size={20} />
+              <span>Configurações de Áudio</span>
             </div>
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-4 flex items-center justify-between border-b border-slate-50">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-                    <MinusCircle size={20} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-800">Penalidade por Erro</p>
-                    <p className="text-xs text-slate-500">Desconta -5 pontos em respostas erradas</p>
-                  </div>
-                </div>
-                <Switch checked={penaltyEnabled} onChange={setPenaltyEnabled} />
-              </div>
-
-              <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500">
                     <Volume2 size={20} />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800">Sons</p>
-                    <p className="text-xs text-slate-500">Feedback sonoro para acerto e erro</p>
+                    <p className="font-bold text-slate-800">Efeitos Sonoros</p>
+                    <p className="text-xs text-slate-500">Sons de acerto e erro</p>
                   </div>
                 </div>
-                <Switch checked={soundEnabled} onChange={setSoundEnabled} />
+                <Switch checked={soundEffectsEnabled} onChange={setSoundEffectsEnabled} />
               </div>
-            </div>
-          </section>
 
-          {/* Time Settings */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2 text-orange-600 font-semibold">
-              <Timer size={20} />
-              <span>Tempo Padrão</span>
-            </div>
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-4">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 shrink-0">
-                  <Hourglass size={20} />
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
+                    <Music size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800">Música de Fundo</p>
+                    <p className="text-xs text-slate-500">Ambiente musical durante o jogo</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold text-slate-800">Limite de tempo por pergunta</p>
-                  <p className="text-orange-500 font-bold">{timeLimit} segundos</p>
-                </div>
-              </div>
-              <input 
-                type="range" 
-                min="10" 
-                max="120" 
-                step="5"
-                value={timeLimit}
-                onChange={(e) => setTimeLimit(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
-              />
-              <div className="flex justify-between text-xs text-slate-400 mt-2">
-                <span>10s</span>
-                <span>120s</span>
+                <Switch checked={musicEnabled} onChange={setMusicEnabled} />
               </div>
             </div>
           </section>

@@ -1818,5 +1818,1018 @@ export const initialQuestions = [
     correct_answer: "Benjamim",
     options: ["José", "Benjamim", "Judá", "Rúben"],
     reference: "Gênesis 35:18"
-  }
+  },
+
+
+
+
+
+
+
+  {
+    text: "Onde Jesus nasceu?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "new_testament",
+    correct_answer: "Belém",
+    options: ["Nazaré", "Jerusalém", "Belém", "Cafarnaum"],
+    reference: "Mateus 2:1"
+  },
+
+
+  // Novas Perguntas Adicionadas
+  {
+    text: "Quem foi o primeiro homem a nascer na terra?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Caim",
+    options: ["Adão", "Abel", "Caim", "Sete"],
+    reference: "Gênesis 4:1"
+  },
+  {
+    text: "Qual profeta ungiu os dois primeiros reis de Israel?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Samuel",
+    options: ["Natã", "Elias", "Samuel", "Eliseu"],
+    reference: "1 Samuel 10:1; 16:13"
+  },
+  {
+    text: "Quem era o rei da Babilônia que conquistou Jerusalém?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Nabucodonosor",
+    options: ["Dario", "Ciro", "Nabucodonosor", "Senaqueribe"],
+    reference: "2 Reis 24:10"
+  },
+
+
+
+
+  {
+    text: "Qual era a profissão de Pedro antes de seguir Jesus?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Pescador",
+    options: ["Carpinteiro", "Cobrador de impostos", "Pescador", "Pastor"],
+    reference: "Mateus 4:18"
+  },
+
+
+
+
+
+
+  {
+    text: "Quem foi o sumo sacerdote que julgou Jesus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Caifás",
+    options: ["Anás", "Caifás", "Pilatos", "Herodes"],
+    reference: "Mateus 26:57"
+  },
+  {
+    text: "Qual o nome do monte onde Jesus fez o sermão das bem-aventuranças?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "new_testament",
+    correct_answer: "Monte das Bem-Aventuranças (tradicionalmente)",
+    options: ["Monte das Oliveiras", "Monte Sinai", "Monte das Bem-Aventuranças", "Monte Carmelo"],
+    reference: "Mateus 5:1"
+  },
+  {
+    text: "Quem foi o rei da Pérsia que permitiu o retorno dos judeus?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Ciro",
+    options: ["Dario", "Artaxerxes", "Ciro", "Xerxes"],
+    reference: "Esdras 1:1"
+  },
+
+  {
+    text: "Quem foi o homem que pediu o corpo de Jesus a Pilatos?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "José de Arimateia",
+    options: ["Nicodemos", "Pedro", "José de Arimateia", "João"],
+    reference: "Mateus 27:57"
+  },
+  {
+    text: "Qual o nome do anjo que anunciou o nascimento de Jesus a Maria?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Gabriel",
+    options: ["Miguel", "Rafael", "Gabriel", "Uriel"],
+    reference: "Lucas 1:26"
+  },
+  // Novas 50 Perguntas
+  {
+    text: "Quem foi o pai de Matusalém?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Enoque",
+    options: ["Noé", "Enoque", "Lameque", "Jarede"],
+    reference: "Gênesis 5:21"
+  },
+  {
+    text: "Qual o nome da esposa de José do Egito?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Asenate",
+    options: ["Zípora", "Asenate", "Bila", "Tamar"],
+    reference: "Gênesis 41:45"
+  },
+  {
+    text: "Quem foi o primeiro filho de Jacó?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Rúben",
+    options: ["Judá", "Rúben", "Simeão", "Levi"],
+    reference: "Gênesis 29:32"
+  },
+  {
+    text: "Qual profeta repreendeu o rei Ezequias por mostrar seus tesouros?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Isaías",
+    options: ["Jeremias", "Isaías", "Miqueias", "Oseias"],
+    reference: "2 Reis 20:14"
+  },
+  {
+    text: "Quem era o sumo sacerdote quando Samuel foi levado ao templo?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Eli",
+    options: ["Samuel", "Eli", "Arão", "Zadoque"],
+    reference: "1 Samuel 1:9"
+  },
+  {
+    text: "Qual o nome do monte onde a lei foi dada a Moisés?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "old_testament",
+    correct_answer: "Monte Sinai",
+    options: ["Monte Carmelo", "Monte Sinai", "Monte Sião", "Monte Nebo"],
+    reference: "Êxodo 19"
+  },
+  {
+    text: "Quem foi o rei que viu o relógio de sol retroceder?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "miracles",
+    correct_answer: "Ezequias",
+    options: ["Acaz", "Ezequias", "Josias", "Manassés"],
+    reference: "2 Reis 20:11"
+  },
+  {
+    text: "Qual discípulo foi exilado na ilha de Patmos?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "João",
+    options: ["Pedro", "Paulo", "João", "Tiago"],
+    reference: "Apocalipse 1:9"
+  },
+  {
+    text: "Quem foi a única filha nomeada de Jacó?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Diná",
+    options: ["Lia", "Diná", "Raquel", "Tamar"],
+    reference: "Gênesis 30:21"
+  },
+  {
+    text: "Qual o nome do segundo marido de Rute?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Boaz",
+    options: ["Malom", "Boaz", "Quiliom", "Elimeleque"],
+    reference: "Rute 4:13"
+  },
+  {
+    text: "Quem foi o pai de Noé?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Lameque",
+    options: ["Matusalém", "Lameque", "Enoque", "Noé"],
+    reference: "Gênesis 5:28"
+  },
+  {
+    text: "Para onde Jonas fugiu para não ir a Nínive?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Társis",
+    options: ["Damasco", "Társis", "Jope", "Egito"],
+    reference: "Jonas 1:3"
+  },
+  {
+    text: "Quem foi o rei que viveu como animal por 7 anos?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Nabucodonosor",
+    options: ["Belsazar", "Nabucodonosor", "Dario", "Ciro"],
+    reference: "Daniel 4:33"
+  },
+  {
+    text: "Qual o nome do servo de Eliseu que se tornou leproso?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Geazi",
+    options: ["Baruque", "Geazi", "Ziba", "Obadias"],
+    reference: "2 Reis 5:27"
+  },
+  {
+    text: "Quem foi a mãe de Timóteo?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Eunice",
+    options: ["Loide", "Eunice", "Lídia", "Priscila"],
+    reference: "2 Timóteo 1:5"
+  },
+  {
+    text: "Qual o nome da avó de Timóteo?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Loide",
+    options: ["Eunice", "Loide", "Ana", "Sara"],
+    reference: "2 Timóteo 1:5"
+  },
+  {
+    text: "Quem foi o primeiro apóstolo a ser martirizado?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Tiago",
+    options: ["Estêvão", "Tiago", "Pedro", "André"],
+    reference: "Atos 12:2"
+  },
+  {
+    text: "Qual o nome da porta do templo onde Pedro curou o coxo?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "miracles",
+    correct_answer: "Formosa",
+    options: ["Dourada", "Formosa", "Oriental", "Das Ovelhas"],
+    reference: "Atos 3:2"
+  },
+  {
+    text: "Quem foi o profeta que rasgou sua capa em 12 pedaços?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "old_testament",
+    correct_answer: "Aías",
+    options: ["Samuel", "Aías", "Natã", "Elias"],
+    reference: "1 Reis 11:30"
+  },
+  {
+    text: "Qual rei de Israel foi ungido por um jovem profeta a mando de Eliseu?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Jeú",
+    options: ["Acabe", "Jeú", "Jorão", "Onri"],
+    reference: "2 Reis 9:6"
+  },
+  {
+    text: "Quem foi o pai de Gideão?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Joás",
+    options: ["Manoá", "Joás", "Baraque", "Jefte"],
+    reference: "Juízes 6:11"
+  },
+  {
+    text: "Quem foi o rei que sucedeu Salomão?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Roboão",
+    options: ["Jeroboão", "Roboão", "Abias", "Asa"],
+    reference: "1 Reis 11:43"
+  },
+  {
+    text: "Qual tribo de Israel cuidava do tabernáculo?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "old_testament",
+    correct_answer: "Levi",
+    options: ["Judá", "Levi", "Benjamim", "Efraim"],
+    reference: "Números 1:50"
+  },
+  {
+    text: "Quem foi o homem que tocou na arca da aliança e morreu?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Uzá",
+    options: ["Obede-Edom", "Uzá", "Aiô", "Mical"],
+    reference: "2 Samuel 6:7"
+  },
+  {
+    text: "O que aconteceu com a esposa de Ló?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "old_testament",
+    correct_answer: "Virou uma estátua de sal",
+    options: ["Morreu queimada", "Virou uma estátua de sal", "Fugiu para Zoar", "Foi levada por anjos"],
+    reference: "Gênesis 19:26"
+  },
+  {
+    text: "Quem foi o rei persa marido de Ester?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Assuero",
+    options: ["Ciro", "Assuero", "Dario", "Artaxerxes"],
+    reference: "Ester 2:16"
+  },
+  {
+    text: "Qual profeta foi morto por ordem do rei Joás?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Zacarias",
+    options: ["Isaías", "Zacarias", "Jeremias", "Miqueias"],
+    reference: "2 Crônicas 24:21"
+  },
+  {
+    text: "Quem foi o pai de Samuel?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Elcana",
+    options: ["Eli", "Elcana", "Jessé", "Manoá"],
+    reference: "1 Samuel 1:1"
+  },
+  {
+    text: "Qual o nome do monte do sacrifício de Isaque?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "old_testament",
+    correct_answer: "Moriá",
+    options: ["Sinai", "Moriá", "Carmelo", "Sião"],
+    reference: "Gênesis 22:2"
+  },
+  {
+    text: "Quem foi o rei que consultou a médium de En-Dor?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Saul",
+    options: ["Davi", "Saul", "Salomão", "Acabe"],
+    reference: "1 Samuel 28:7"
+  },
+  {
+    text: "Qual profeta é conhecido como o 'profeta chorão'?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Jeremias",
+    options: ["Isaías", "Jeremias", "Ezequiel", "Daniel"],
+    reference: "Tradição"
+  },
+  {
+    text: "Quem é chamado de 'o discípulo amado'?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "João",
+    options: ["Pedro", "João", "Tiago", "André"],
+    reference: "João 13:23"
+  },
+  {
+    text: "Qual fariseu visitou Jesus à noite?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Nicodemos",
+    options: ["Gamaliel", "Nicodemos", "Caifás", "José de Arimateia"],
+    reference: "João 3:2"
+  },
+  {
+    text: "Qual o nome do lugar onde Jesus orou em agonia?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "new_testament",
+    correct_answer: "Getsêmani",
+    options: ["Gólgota", "Getsêmani", "Betânia", "Jericó"],
+    reference: "Mateus 26:36"
+  },
+  {
+    text: "Quem foi o primeiro rei do Reino do Norte (Israel)?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Jeroboão",
+    options: ["Roboão", "Jeroboão", "Acabe", "Jeú"],
+    reference: "1 Reis 12:20"
+  },
+  {
+    text: "Qual profeta previu o nascimento de Jesus em Belém?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Miqueias",
+    options: ["Isaías", "Miqueias", "Zacarias", "Malaquias"],
+    reference: "Miqueias 5:2"
+  },
+  {
+    text: "Qual o nome do monte da ascensão de Jesus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "new_testament",
+    correct_answer: "Monte das Oliveiras",
+    options: ["Monte Tabor", "Monte das Oliveiras", "Monte Sião", "Monte Hermom"],
+    reference: "Atos 1:12"
+  },
+  {
+    text: "Qual rei libertou Joaquim da prisão na Babilônia?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Evil-Merodaque",
+    options: ["Nabucodonosor", "Evil-Merodaque", "Belsazar", "Neriglissar"],
+    reference: "2 Reis 25:27"
+  },
+  {
+    text: "Qual profeta andou nu e descalço por 3 anos?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Isaías",
+    options: ["Jeremias", "Isaías", "Ezequiel", "Oseias"],
+    reference: "Isaías 20:3"
+  },
+  {
+    text: "Qual o nome do servo de Abraão (provável)?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Eliezer",
+    options: ["Gérson", "Eliezer", "Ismael", "Ló"],
+    reference: "Gênesis 15:2"
+  },
+  {
+    text: "Quem foi o rei que teve lepra na testa?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Uzias",
+    options: ["Acaz", "Uzias", "Manassés", "Asa"],
+    reference: "2 Crônicas 26:19"
+  },
+  {
+    text: "Quem foi o homem que andou com Deus e foi transladado?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Enoque",
+    options: ["Noé", "Enoque", "Elias", "Moisés"],
+    reference: "Gênesis 5:24"
+  },
+  {
+    text: "Qual o nome do filho de Jônatas que era aleijado?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Mefibosete",
+    options: ["Absalão", "Mefibosete", "Is-Bosete", "Adonias"],
+    reference: "2 Samuel 4:4"
+  },
+  {
+    text: "Quem foi o rei que queimou o rolo de Jeremias?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Jeoaquim",
+    options: ["Zedequias", "Jeoaquim", "Josias", "Jeoacaz"],
+    reference: "Jeremias 36:23"
+  },
+  {
+    text: "Qual governador romano manteve Paulo preso por 2 anos?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Félix",
+    options: ["Festo", "Félix", "Pilatos", "Gálio"],
+    reference: "Atos 24:27"
+  },
+  {
+    text: "Qual o nome do deus peixe dos filisteus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Dagom",
+    options: ["Baal", "Dagom", "Moloque", "Astarote"],
+    reference: "1 Samuel 5:2"
+  },
+  {
+    text: "Qual o nome do monte onde Elias ouviu a voz de Deus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Horebe",
+    options: ["Carmelo", "Horebe", "Sinai", "Sião"],
+    reference: "1 Reis 19:8"
+  },
+  {
+    text: "Quem foi o rei que teve 700 esposas?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Salomão",
+    options: ["Davi", "Salomão", "Acabe", "Roboão"],
+    reference: "1 Reis 11:3"
+  },
+  {
+    text: "Qual profeta disse 'Eis-me aqui, envia-me a mim'?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Isaías",
+    options: ["Jeremias", "Isaías", "Ezequiel", "Daniel"],
+    reference: "Isaías 6:8"
+  },
+  {
+    text: "Qual a cidade onde o Espírito Santo desceu no Pentecostes?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "new_testament",
+    correct_answer: "Jerusalém",
+    options: ["Antioquia", "Jerusalém", "Samaria", "Roma"],
+    reference: "Atos 2:1"
+  },,
+  // Novas 50 Perguntas
+  {
+    text: "Quem foi o pai de Matusalém?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Enoque",
+    options: ["Noé", "Enoque", "Lameque", "Jarede"],
+    reference: "Gênesis 5:21"
+  },
+  {
+    text: "Qual o nome da esposa de José do Egito?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Asenate",
+    options: ["Zípora", "Asenate", "Bila", "Tamar"],
+    reference: "Gênesis 41:45"
+  },
+  {
+    text: "Quem foi o primeiro filho de Jacó?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Rúben",
+    options: ["Judá", "Rúben", "Simeão", "Levi"],
+    reference: "Gênesis 29:32"
+  },
+  {
+    text: "Qual profeta repreendeu o rei Ezequias por mostrar seus tesouros?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Isaías",
+    options: ["Jeremias", "Isaías", "Miqueias", "Oseias"],
+    reference: "2 Reis 20:14"
+  },
+  {
+    text: "Quem era o sumo sacerdote quando Samuel foi levado ao templo?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Eli",
+    options: ["Samuel", "Eli", "Arão", "Zadoque"],
+    reference: "1 Samuel 1:9"
+  },
+  {
+    text: "Qual o nome do monte onde a lei foi dada a Moisés?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "old_testament",
+    correct_answer: "Monte Sinai",
+    options: ["Monte Carmelo", "Monte Sinai", "Monte Sião", "Monte Nebo"],
+    reference: "Êxodo 19"
+  },
+  {
+    text: "Quem foi o rei que viu o relógio de sol retroceder?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "miracles",
+    correct_answer: "Ezequias",
+    options: ["Acaz", "Ezequias", "Josias", "Manassés"],
+    reference: "2 Reis 20:11"
+  },
+  {
+    text: "Qual discípulo foi exilado na ilha de Patmos?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "João",
+    options: ["Pedro", "Paulo", "João", "Tiago"],
+    reference: "Apocalipse 1:9"
+  },
+  {
+    text: "Quem foi a única filha nomeada de Jacó?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Diná",
+    options: ["Lia", "Diná", "Raquel", "Tamar"],
+    reference: "Gênesis 30:21"
+  },
+  {
+    text: "Qual o nome do segundo marido de Rute?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Boaz",
+    options: ["Malom", "Boaz", "Quiliom", "Elimeleque"],
+    reference: "Rute 4:13"
+  },
+  {
+    text: "Quem foi o pai de Noé?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Lameque",
+    options: ["Matusalém", "Lameque", "Enoque", "Noé"],
+    reference: "Gênesis 5:28"
+  },
+  {
+    text: "Para onde Jonas fugiu para não ir a Nínive?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Társis",
+    options: ["Damasco", "Társis", "Jope", "Egito"],
+    reference: "Jonas 1:3"
+  },
+  {
+    text: "Quem foi o rei que viveu como animal por 7 anos?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Nabucodonosor",
+    options: ["Belsazar", "Nabucodonosor", "Dario", "Ciro"],
+    reference: "Daniel 4:33"
+  },
+  {
+    text: "Qual o nome do servo de Eliseu que se tornou leproso?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Geazi",
+    options: ["Baruque", "Geazi", "Ziba", "Obadias"],
+    reference: "2 Reis 5:27"
+  },
+  {
+    text: "Quem foi a mãe de Timóteo?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Eunice",
+    options: ["Loide", "Eunice", "Lídia", "Priscila"],
+    reference: "2 Timóteo 1:5"
+  },
+  {
+    text: "Qual o nome da avó de Timóteo?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Loide",
+    options: ["Eunice", "Loide", "Ana", "Sara"],
+    reference: "2 Timóteo 1:5"
+  },
+  {
+    text: "Quem foi o primeiro apóstolo a ser martirizado?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Tiago",
+    options: ["Estêvão", "Tiago", "Pedro", "André"],
+    reference: "Atos 12:2"
+  },
+  {
+    text: "Qual o nome da porta do templo onde Pedro curou o coxo?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "miracles",
+    correct_answer: "Formosa",
+    options: ["Dourada", "Formosa", "Oriental", "Das Ovelhas"],
+    reference: "Atos 3:2"
+  },
+  {
+    text: "Quem foi o profeta que rasgou sua capa em 12 pedaços?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "old_testament",
+    correct_answer: "Aías",
+    options: ["Samuel", "Aías", "Natã", "Elias"],
+    reference: "1 Reis 11:30"
+  },
+  {
+    text: "Qual rei de Israel foi ungido por um jovem profeta a mando de Eliseu?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Jeú",
+    options: ["Acabe", "Jeú", "Jorão", "Onri"],
+    reference: "2 Reis 9:6"
+  },
+  {
+    text: "Quem foi o pai de Gideão?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Joás",
+    options: ["Manoá", "Joás", "Baraque", "Jefte"],
+    reference: "Juízes 6:11"
+  },
+  {
+    text: "Quem foi o rei que sucedeu Salomão?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Roboão",
+    options: ["Jeroboão", "Roboão", "Abias", "Asa"],
+    reference: "1 Reis 11:43"
+  },
+  {
+    text: "Qual tribo de Israel cuidava do tabernáculo?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "old_testament",
+    correct_answer: "Levi",
+    options: ["Judá", "Levi", "Benjamim", "Efraim"],
+    reference: "Números 1:50"
+  },
+  {
+    text: "Quem foi o homem que tocou na arca da aliança e morreu?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Uzá",
+    options: ["Obede-Edom", "Uzá", "Aiô", "Mical"],
+    reference: "2 Samuel 6:7"
+  },
+  {
+    text: "O que aconteceu com a esposa de Ló?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "old_testament",
+    correct_answer: "Virou uma estátua de sal",
+    options: ["Morreu queimada", "Virou uma estátua de sal", "Fugiu para Zoar", "Foi levada por anjos"],
+    reference: "Gênesis 19:26"
+  },
+  {
+    text: "Quem foi o rei persa marido de Ester?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Assuero",
+    options: ["Ciro", "Assuero", "Dario", "Artaxerxes"],
+    reference: "Ester 2:16"
+  },
+  {
+    text: "Qual profeta foi morto por ordem do rei Joás?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Zacarias",
+    options: ["Isaías", "Zacarias", "Jeremias", "Miqueias"],
+    reference: "2 Crônicas 24:21"
+  },
+  {
+    text: "Quem foi o pai de Samuel?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Elcana",
+    options: ["Eli", "Elcana", "Jessé", "Manoá"],
+    reference: "1 Samuel 1:1"
+  },
+  {
+    text: "Qual o nome do monte do sacrifício de Isaque?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "old_testament",
+    correct_answer: "Moriá",
+    options: ["Sinai", "Moriá", "Carmelo", "Sião"],
+    reference: "Gênesis 22:2"
+  },
+  {
+    text: "Quem foi o rei que consultou a médium de En-Dor?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Saul",
+    options: ["Davi", "Saul", "Salomão", "Acabe"],
+    reference: "1 Samuel 28:7"
+  },
+  {
+    text: "Qual profeta é conhecido como o 'profeta chorão'?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Jeremias",
+    options: ["Isaías", "Jeremias", "Ezequiel", "Daniel"],
+    reference: "Tradição"
+  },
+  {
+    text: "Quem é chamado de 'o discípulo amado'?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "João",
+    options: ["Pedro", "João", "Tiago", "André"],
+    reference: "João 13:23"
+  },
+  {
+    text: "Qual fariseu visitou Jesus à noite?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Nicodemos",
+    options: ["Gamaliel", "Nicodemos", "Caifás", "José de Arimateia"],
+    reference: "João 3:2"
+  },
+  {
+    text: "Qual o nome do lugar onde Jesus orou em agonia?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "new_testament",
+    correct_answer: "Getsêmani",
+    options: ["Gólgota", "Getsêmani", "Betânia", "Jericó"],
+    reference: "Mateus 26:36"
+  },
+  {
+    text: "Quem foi o primeiro rei do Reino do Norte (Israel)?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Jeroboão",
+    options: ["Roboão", "Jeroboão", "Acabe", "Jeú"],
+    reference: "1 Reis 12:20"
+  },
+  {
+    text: "Qual profeta previu o nascimento de Jesus em Belém?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Miqueias",
+    options: ["Isaías", "Miqueias", "Zacarias", "Malaquias"],
+    reference: "Miqueias 5:2"
+  },
+  {
+    text: "Qual o nome do monte da ascensão de Jesus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "new_testament",
+    correct_answer: "Monte das Oliveiras",
+    options: ["Monte Tabor", "Monte das Oliveiras", "Monte Sião", "Monte Hermom"],
+    reference: "Atos 1:12"
+  },
+  {
+    text: "Qual rei libertou Joaquim da prisão na Babilônia?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Evil-Merodaque",
+    options: ["Nabucodonosor", "Evil-Merodaque", "Belsazar", "Neriglissar"],
+    reference: "2 Reis 25:27"
+  },
+  {
+    text: "Qual profeta andou nu e descalço por 3 anos?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Isaías",
+    options: ["Jeremias", "Isaías", "Ezequiel", "Oseias"],
+    reference: "Isaías 20:3"
+  },
+  {
+    text: "Qual o nome do servo de Abraão (provável)?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Eliezer",
+    options: ["Gérson", "Eliezer", "Ismael", "Ló"],
+    reference: "Gênesis 15:2"
+  },
+  {
+    text: "Quem foi o rei que teve lepra na testa?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Uzias",
+    options: ["Acaz", "Uzias", "Manassés", "Asa"],
+    reference: "2 Crônicas 26:19"
+  },
+  {
+    text: "Quem foi o homem que andou com Deus e foi transladado?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Enoque",
+    options: ["Noé", "Enoque", "Elias", "Moisés"],
+    reference: "Gênesis 5:24"
+  },
+  {
+    text: "Qual o nome do filho de Jônatas que era aleijado?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Mefibosete",
+    options: ["Absalão", "Mefibosete", "Is-Bosete", "Adonias"],
+    reference: "2 Samuel 4:4"
+  },
+  {
+    text: "Quem foi o rei que queimou o rolo de Jeremias?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Jeoaquim",
+    options: ["Zedequias", "Jeoaquim", "Josias", "Jeoacaz"],
+    reference: "Jeremias 36:23"
+  },
+  {
+    text: "Qual governador romano manteve Paulo preso por 2 anos?",
+    type: "multiple_choice",
+    difficulty: "hard",
+    category: "characters",
+    correct_answer: "Félix",
+    options: ["Festo", "Félix", "Pilatos", "Gálio"],
+    reference: "Atos 24:27"
+  },
+  {
+    text: "Qual o nome do deus peixe dos filisteus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Dagom",
+    options: ["Baal", "Dagom", "Moloque", "Astarote"],
+    reference: "1 Samuel 5:2"
+  },
+  {
+    text: "Qual o nome do monte onde Elias ouviu a voz de Deus?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "old_testament",
+    correct_answer: "Horebe",
+    options: ["Carmelo", "Horebe", "Sinai", "Sião"],
+    reference: "1 Reis 19:8"
+  },
+  {
+    text: "Quem foi o rei que teve 700 esposas?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "characters",
+    correct_answer: "Salomão",
+    options: ["Davi", "Salomão", "Acabe", "Roboão"],
+    reference: "1 Reis 11:3"
+  },
+  {
+    text: "Qual profeta disse 'Eis-me aqui, envia-me a mim'?",
+    type: "multiple_choice",
+    difficulty: "medium",
+    category: "characters",
+    correct_answer: "Isaías",
+    options: ["Jeremias", "Isaías", "Ezequiel", "Daniel"],
+    reference: "Isaías 6:8"
+  },
+  {
+    text: "Qual a cidade onde o Espírito Santo desceu no Pentecostes?",
+    type: "multiple_choice",
+    difficulty: "easy",
+    category: "new_testament",
+    correct_answer: "Jerusalém",
+    options: ["Antioquia", "Jerusalém", "Samaria", "Roma"],
+    reference: "Atos 2:1"
+  },
 ];
