@@ -70,15 +70,7 @@ export default function Teams() {
   return (
     <PageTransition>
       <div className="space-y-6 relative min-h-[80vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Link to="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft size={24} className="text-slate-900" />
-          </Link>
-          <h2 className="text-xl font-bold text-slate-900">Times</h2>
-          <div className="w-10" /> {/* Spacer for centering */}
-        </div>
-
+        
         {/* Team List */}
         <div className="space-y-4">
           {teams.map((team) => (

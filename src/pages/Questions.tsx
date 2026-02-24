@@ -99,20 +99,12 @@ export default function Questions() {
   return (
     <PageTransition>
       <div className="space-y-6 pb-20">
-        {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center sticky top-0 bg-slate-50 z-10 py-4 -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-              <ArrowLeft size={24} className="text-slate-700" />
-            </Link>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-800">Banco de Perguntas</h2>
-              <p className="text-sm text-slate-500">{filteredQuestions.length} perguntas encontradas</p>
-            </div>
-          </div>
-          <button
+        {/* Actions */}
+        <div className="flex justify-between items-center">
+           <p className="text-sm text-slate-500 font-medium">{filteredQuestions.length} perguntas encontradas</p>
+           <button
             onClick={generateAIQuestions}
-            className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-purple-700 shadow-sm transition-colors w-full md:w-auto justify-center"
+            className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-purple-700 shadow-sm transition-colors"
           >
             <Sparkles size={16} />
             Gerar com IA

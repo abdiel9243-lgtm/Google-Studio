@@ -61,6 +61,13 @@ const setStorage = (key: string, value: any) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
+// Helper for text normalization
+const normalizeText = (text: string) => {
+  return text.trim().toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    .replace(/\s{2,}/g, " ");
+};
+
 // Initialize Data
 const initializeData = () => {
   let storedQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
@@ -77,9 +84,7 @@ const initializeData = () => {
     }
 
     // Normalize text for duplicate check
-    const normalizedText = q.text.trim().toLowerCase()
-      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-      .replace(/\s{2,}/g, " ");
+    const normalizedText = normalizeText(q.text);
 
     if (seenTexts.has(normalizedText)) {
       removedCount++;
@@ -119,11 +124,11 @@ const initializeData = () => {
   // 2. Sync new questions from initialQuestions (if any)
   // This runs every time to ensure updates to the file are reflected
   // We re-check against the cleaned storedQuestions
-  const currentStoredTexts = new Set(storedQuestions.map(q => q.text));
+  const currentStoredTexts = new Set(storedQuestions.map(q => normalizeText(q.text)));
   const questionsToAdd: Question[] = [];
 
   for (const q of initialQuestions) {
-    if (!currentStoredTexts.has(q.text)) {
+    if (!currentStoredTexts.has(normalizeText(q.text))) {
       questionsToAdd.push({
         ...q,
         id: uuidv4(),
@@ -171,6 +176,17 @@ export const api = {
 
   createQuestion: async (question: Omit<Question, 'id'>) => {
     const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.id);
+    
+    // Validation
+    if (question.options && !question.options.includes(question.correct_answer)) {
+      throw new Error('A resposta correta deve estar entre as opções.');
+    }
+
+    const normalizedNewText = normalizeText(question.text);
+    if (questions.some(q => normalizeText(q.text) === normalizedNewText)) {
+      throw new Error('Já existe uma pergunta idêntica no banco de dados.');
+    }
+
     const newQuestion = { ...question, id: uuidv4(), created_at: new Date().toISOString() };
     questions.unshift(newQuestion as Question);
     setStorage(STORAGE_KEYS.QUESTIONS, questions);
@@ -180,8 +196,21 @@ export const api = {
   updateQuestion: async (id: string, updates: Partial<Question>) => {
     const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.id);
     const index = questions.findIndex(q => q.id === id);
+    
     if (index !== -1) {
-      questions[index] = { ...questions[index], ...updates };
+      const updatedQuestion = { ...questions[index], ...updates };
+      
+      // Validation
+      if (updatedQuestion.options && !updatedQuestion.options.includes(updatedQuestion.correct_answer)) {
+        throw new Error('A resposta correta deve estar entre as opções.');
+      }
+
+      const normalizedNewText = normalizeText(updatedQuestion.text);
+      if (questions.some(q => q.id !== id && normalizeText(q.text) === normalizedNewText)) {
+        throw new Error('Já existe uma pergunta idêntica no banco de dados.');
+      }
+
+      questions[index] = updatedQuestion;
       setStorage(STORAGE_KEYS.QUESTIONS, questions);
     }
     return { success: true };
@@ -321,16 +350,24 @@ export const api = {
       const newQuestions = JSON.parse(jsonStr);
       
       const currentQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.text);
+      const currentTexts = new Set(currentQuestions.map(q => normalizeText(q.text)));
       let addedCount = 0;
       
       for (const q of newQuestions) {
-        // Simple duplicate check
-        if (!currentQuestions.some(ex => ex.text === q.text)) {
+        // Validation: Check options
+        if (!q.options || !q.options.includes(q.correct_answer)) {
+          continue;
+        }
+
+        // Validation: Check duplicates
+        const normalizedText = normalizeText(q.text);
+        if (!currentTexts.has(normalizedText)) {
           currentQuestions.unshift({
             ...q,
             id: uuidv4(),
             created_at: new Date().toISOString()
           });
+          currentTexts.add(normalizedText);
           addedCount++;
         }
       }

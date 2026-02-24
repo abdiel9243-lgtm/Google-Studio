@@ -152,15 +152,8 @@ export default function MatchSetup() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-slate-50 pb-32">
-        {/* Header */}
-        <div className="bg-white p-4 flex items-center gap-4 shadow-sm sticky top-0 z-10">
-          <Link to="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft size={24} className="text-slate-700" />
-          </Link>
-          <h1 className="text-xl font-bold text-slate-800">Configurar Partida</h1>
-        </div>
-
-        <div className="p-4 space-y-6 max-w-md mx-auto">
+        
+        <div className="space-y-6 max-w-md mx-auto">
           
           {/* Game Mode */}
           <section className="space-y-3">

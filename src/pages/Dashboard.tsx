@@ -13,19 +13,8 @@ export default function Dashboard() {
 
   return (
     <PageTransition>
-      <div className="space-y-6 pt-2">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <h1 className="text-3xl font-bold text-indigo-700">Desafio</h1>
-          <h1 className="text-3xl font-bold text-slate-900 -mt-1">Bíblico</h1>
-          <p className="text-slate-500 text-sm mt-1">Gincana Bíblica para Igrejas</p>
-        </div>
-        <Link to="/settings" className="bg-indigo-50 p-3 rounded-2xl text-indigo-600 hover:bg-indigo-100 transition">
-          <SettingsIcon size={24} />
-        </Link>
-      </div>
-
+      <div className="space-y-6">
+      
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-3">
         {/* Questions Card */}
