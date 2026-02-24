@@ -8,7 +8,12 @@ export default function Layout() {
   const isGameScreen = location.pathname.includes('/game/');
 
   if (isGameScreen) {
-    return <Outlet />;
+    return (
+      <>
+        <div className="fixed top-0 left-0 right-0 h-safe-top bg-black z-50" />
+        <Outlet />
+      </>
+    );
   }
 
   const navItems = [
@@ -20,10 +25,34 @@ export default function Layout() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 pt-safe-top">
+      <div className="fixed top-0 left-0 right-0 h-safe-top bg-black z-50" />
       <main className="max-w-md mx-auto p-4">
         <Outlet />
       </main>
+      
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe-bottom z-40">
+        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={clsx(
+                  "flex flex-col items-center justify-center w-full h-full space-y-1",
+                  isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

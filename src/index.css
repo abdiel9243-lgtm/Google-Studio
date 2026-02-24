@@ -36,3 +36,20 @@ body {
   transform: scale(0.98);
   transition: transform 0.1s;
 }
+
+/* Safe Area Utilities */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.pb-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.h-safe-top {
+  height: env(safe-area-inset-top, 20px);
+}

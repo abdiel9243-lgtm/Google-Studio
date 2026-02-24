@@ -278,7 +278,7 @@ export default function Game() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-stone-50 text-slate-900 pb-safe relative overflow-hidden">
+      <div className="min-h-screen bg-stone-50 text-slate-900 pb-safe pt-safe relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
           <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(#444 1px, transparent 1px)', backgroundSize: '20px 20px' }} />

@@ -62,31 +62,97 @@ const setStorage = (key: string, value: any) => {
 };
 
 // Initialize Data
-if (!localStorage.getItem(STORAGE_KEYS.INIT)) {
-  // Add IDs to initial questions if missing
-  const questionsWithIds = initialQuestions.map(q => ({
-    ...q,
-    id: uuidv4(),
-    created_at: new Date().toISOString()
-  }));
-  setStorage(STORAGE_KEYS.QUESTIONS, questionsWithIds);
-  setStorage(STORAGE_KEYS.TEAMS, []);
-  setStorage(STORAGE_KEYS.MATCHES, []);
-  localStorage.setItem(STORAGE_KEYS.INIT, 'true');
-}
+const initializeData = () => {
+  let storedQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+  
+  // Filter out corrupted data, duplicates, and invalid options
+  const seenTexts = new Set<string>();
+  const validQuestions: Question[] = [];
+  let removedCount = 0;
+
+  for (const q of storedQuestions) {
+    if (!q || !q.text || !q.id) {
+      removedCount++;
+      continue;
+    }
+
+    // Normalize text for duplicate check
+    const normalizedText = q.text.trim().toLowerCase()
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+      .replace(/\s{2,}/g, " ");
+
+    if (seenTexts.has(normalizedText)) {
+      removedCount++;
+      continue;
+    }
+
+    // Check if correct answer is in options
+    if (q.options && !q.options.includes(q.correct_answer)) {
+      removedCount++;
+      continue;
+    }
+
+    seenTexts.add(normalizedText);
+    validQuestions.push(q);
+  }
+  
+  if (removedCount > 0) {
+    console.warn(`Removed ${removedCount} invalid/duplicate questions from storage.`);
+    storedQuestions = validQuestions;
+    setStorage(STORAGE_KEYS.QUESTIONS, storedQuestions);
+  }
+  
+  // 1. Initialize if empty
+  if (!localStorage.getItem(STORAGE_KEYS.INIT) || storedQuestions.length === 0) {
+    const questionsWithIds = initialQuestions.map(q => ({
+      ...q,
+      id: uuidv4(),
+      created_at: new Date().toISOString()
+    }));
+    setStorage(STORAGE_KEYS.QUESTIONS, questionsWithIds);
+    setStorage(STORAGE_KEYS.TEAMS, []);
+    setStorage(STORAGE_KEYS.MATCHES, []);
+    localStorage.setItem(STORAGE_KEYS.INIT, 'true');
+    return;
+  }
+
+  // 2. Sync new questions from initialQuestions (if any)
+  // This runs every time to ensure updates to the file are reflected
+  // We re-check against the cleaned storedQuestions
+  const currentStoredTexts = new Set(storedQuestions.map(q => q.text));
+  const questionsToAdd: Question[] = [];
+
+  for (const q of initialQuestions) {
+    if (!currentStoredTexts.has(q.text)) {
+      questionsToAdd.push({
+        ...q,
+        id: uuidv4(),
+        created_at: new Date().toISOString()
+      } as Question);
+    }
+  }
+
+  if (questionsToAdd.length > 0) {
+    const updatedQuestions = [...questionsToAdd, ...storedQuestions];
+    setStorage(STORAGE_KEYS.QUESTIONS, updatedQuestions);
+    console.log(`Synced ${questionsToAdd.length} new questions from code.`);
+  }
+};
+
+initializeData();
 
 // --- API Implementation ---
 
 export const api = {
   getStats: async () => {
-    const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+    const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.id);
     const teams = getStorage<Team[]>(STORAGE_KEYS.TEAMS, []);
     const matches = getStorage<Match[]>(STORAGE_KEYS.MATCHES, []);
     return { questions: questions.length, teams: teams.length, matches: matches.length };
   },
 
   getQuestions: async (params?: { limit?: number; category?: string; difficulty?: string; search?: string }) => {
-    let questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+    let questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.text);
     
     if (params?.category) questions = questions.filter(q => q.category === params.category);
     if (params?.difficulty) questions = questions.filter(q => q.difficulty === params.difficulty);
@@ -104,7 +170,7 @@ export const api = {
   },
 
   createQuestion: async (question: Omit<Question, 'id'>) => {
-    const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+    const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.id);
     const newQuestion = { ...question, id: uuidv4(), created_at: new Date().toISOString() };
     questions.unshift(newQuestion as Question);
     setStorage(STORAGE_KEYS.QUESTIONS, questions);
@@ -112,7 +178,7 @@ export const api = {
   },
 
   updateQuestion: async (id: string, updates: Partial<Question>) => {
-    const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+    const questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.id);
     const index = questions.findIndex(q => q.id === id);
     if (index !== -1) {
       questions[index] = { ...questions[index], ...updates };
@@ -122,7 +188,7 @@ export const api = {
   },
 
   deleteQuestion: async (id: string) => {
-    let questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+    let questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.id);
     questions = questions.filter(q => q.id !== id);
     setStorage(STORAGE_KEYS.QUESTIONS, questions);
   },
@@ -214,11 +280,13 @@ export const api = {
     const genAI = new GoogleGenAI({ apiKey });
     
     const prompt = `
-      Generate 10 unique biblical questions for a quiz game in Portuguese (Brazil).
+      Generate 20 unique biblical questions for a quiz game in Portuguese (Brazil).
       Focus on diverse categories: Old Testament, New Testament, Characters, Miracles, Parables, Books.
       Vary difficulty: Easy, Medium, Hard.
       Type: ALWAYS "multiple_choice".
       Each question MUST have 4 options.
+      Ensure questions are factually accurate according to the Bible.
+      Avoid very common or repetitive questions. Try to find interesting facts.
       
       Return a JSON array with this schema:
       [
@@ -236,19 +304,23 @@ export const api = {
 
     try {
       const response = await genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          systemInstruction: "You are a biblical scholar and quiz master. Create engaging, accurate, and unique trivia questions for a Bible Quiz app."
+        }
       });
 
       const text = response.text;
       if (!text) throw new Error('No text response from AI');
       
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error('Failed to parse AI response');
+      // Clean up markdown if present (though responseMimeType should handle it, sometimes it wraps in ```json)
+      const jsonStr = text.replace(/```json\n?|\n?```/g, '').trim();
       
-      const newQuestions = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      const newQuestions = JSON.parse(jsonStr);
       
-      const currentQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+      const currentQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.text);
       let addedCount = 0;
       
       for (const q of newQuestions) {
@@ -277,7 +349,7 @@ export const api = {
     if (matchIndex === -1) return null;
     
     const match = matches[matchIndex];
-    let questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
+    let questions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.text);
 
     // Filter by category if needed
     if (match.category_filter) {
