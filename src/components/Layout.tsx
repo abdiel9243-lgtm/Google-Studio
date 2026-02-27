@@ -19,7 +19,7 @@ export default function Layout() {
   }
 
   const getPageTitle = (pathname: string) => {
-    if (pathname === '/') return 'Desafio Bíblico';
+    if (pathname === '/') return 'Desafio Biblico MBB';
     if (pathname.startsWith('/teams')) return 'Gerenciar Times';
     if (pathname.startsWith('/setup')) return 'Nova Partida';
     if (pathname.startsWith('/questions')) return 'Banco de Perguntas';
@@ -68,28 +68,30 @@ export default function Layout() {
         <Outlet />
       </main>
       
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe-bottom z-40">
-        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={clsx(
-                  "flex flex-col items-center justify-center w-full h-full space-y-1",
-                  isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
-                )}
-              >
-                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {/* Bottom Navigation (Only on Home) */}
+      {isHome && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe-bottom z-40">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={clsx(
+                    "flex flex-col items-center justify-center w-full h-full space-y-1",
+                    isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

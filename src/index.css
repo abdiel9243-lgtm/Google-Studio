@@ -1,21 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --color-gold: #D4AF37;
+  --color-premium-black: #050505;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc; /* slate-50 */
-  color: #0f172a; /* slate-900 */
+  background-color: var(--color-premium-black);
+  color: #f8fafc; /* slate-50 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1, h2, h3, .font-serif {
+  font-family: var(--font-serif);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -23,18 +30,26 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(212, 175, 55, 0.4);
 }
 
-/* Material-like Ripple Effect (simple active state) */
-.btn-ripple:active {
-  transform: scale(0.98);
-  transition: transform 0.1s;
+/* Glassmorphism Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-premium {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 /* Safe Area Utilities */
@@ -42,14 +57,6 @@ body {
   padding-top: env(safe-area-inset-top, 20px);
 }
 
-.pt-safe-top {
-  padding-top: env(safe-area-inset-top, 20px);
-}
-
 .pb-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 20px);
-}
-
-.h-safe-top {
-  height: env(safe-area-inset-top, 20px);
 }

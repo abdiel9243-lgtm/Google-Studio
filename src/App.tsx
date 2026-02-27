@@ -10,6 +10,7 @@ import Questions from './pages/Questions';
 import Settings from './pages/Settings';
 import Instructions from './pages/Instructions';
 import History from './pages/History';
+import Projector from './pages/Projector';
 import Layout from './components/Layout';
 import Splash from './components/Splash';
 
@@ -29,6 +30,7 @@ function AnimatedRoutes() {
           <Route path="history" element={<History />} />
           <Route path="instructions" element={<Instructions />} />
         </Route>
+        <Route path="projector/:id" element={<Projector />} />
       </Routes>
     </AnimatePresence>
   );

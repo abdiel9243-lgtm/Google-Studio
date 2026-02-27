@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ArrowLeft, Users, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, Users, Pencil, X } from 'lucide-react';
 import { api, Team } from '../lib/api';
-import { Link } from 'react-router-dom';
 import PageTransition from '../components/PageTransition';
 import { motion, AnimatePresence } from 'motion/react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Teams() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -11,6 +11,19 @@ export default function Teams() {
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamName, setTeamName] = useState('');
   const [teamColor, setTeamColor] = useState('#ef4444'); // Default red
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    hideCancel?: boolean;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     loadTeams();
@@ -55,10 +68,17 @@ export default function Teams() {
   };
 
   const handleDeleteTeam = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este time?')) {
-      await api.deleteTeam(id);
-      loadTeams();
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Excluir Time?',
+      message: 'Tem certeza que deseja excluir este time? Esta ação não pode ser desfeita.',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        await api.deleteTeam(id);
+        loadTeams();
+      }
+    });
   };
 
   const formatDate = (dateString?: string) => {
@@ -70,39 +90,48 @@ export default function Teams() {
   return (
     <PageTransition>
       <div className="space-y-6 relative min-h-[80vh]">
+        {/* Confirmation Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        />
         
         {/* Team List */}
         <div className="space-y-4">
           {teams.map((team) => (
             <div 
               key={team.id} 
-              className="bg-white p-4 rounded-2xl shadow-sm border flex justify-between items-center"
-              style={{ borderColor: `${team.color}40` }} // 25% opacity border
+              className="glass-premium p-5 rounded-[2rem] border-2 flex justify-between items-center shadow-xl transition-all hover:border-gold/30"
+              style={{ borderColor: `${team.color}40` }}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-5">
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-sm" 
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg border border-white/10" 
                   style={{ backgroundColor: team.color }}
                 >
-                  <Users size={20} />
+                  <Users size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-lg">{team.name}</h3>
-                  <p className="text-xs text-slate-400 font-medium">
+                  <h3 className="font-serif font-bold text-white text-xl italic">{team.name}</h3>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">
                     Criado em {formatDate(team.created_at)}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button 
                   onClick={() => handleOpenModal(team)} 
-                  className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-colors"
+                  className="p-3 text-gold hover:bg-gold/10 rounded-2xl transition-all border border-gold/20"
                 >
                   <Pencil size={20} />
                 </button>
                 <button 
                   onClick={() => handleDeleteTeam(team.id)} 
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  className="p-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all border border-red-500/20"
                 >
                   <Trash2 size={20} />
                 </button>
@@ -111,11 +140,11 @@ export default function Teams() {
           ))}
 
           {teams.length === 0 && (
-            <div className="text-center py-12">
-              <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
-                <Users size={32} />
+            <div className="text-center py-20 glass-premium rounded-[3rem] border border-white/10">
+              <div className="bg-gold/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-gold border border-gold/20 shadow-lg">
+                <Users size={40} />
               </div>
-              <p className="text-slate-500 font-medium">Nenhum time cadastrado.</p>
+              <p className="text-zinc-400 font-serif italic text-lg">Nenhum time cadastrado.</p>
             </div>
           )}
         </div>
@@ -123,9 +152,9 @@ export default function Teams() {
         {/* FAB */}
         <button
           onClick={() => handleOpenModal()}
-          className="fixed bottom-6 right-6 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg flex items-center gap-2 hover:bg-indigo-700 transition active:scale-95 z-40"
+          className="fixed bottom-8 right-8 bg-gold text-premium-black px-8 py-4 rounded-2xl font-bold shadow-[0_0_30px_rgba(212,175,55,0.3)] flex items-center gap-3 hover:scale-[1.05] transition-all active:scale-95 z-40 uppercase tracking-widest text-sm"
         >
-          <Plus size={20} />
+          <Plus size={24} />
           Novo Time
         </button>
 
@@ -138,45 +167,45 @@ export default function Teams() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleCloseModal}
-                className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+                className="fixed inset-0 bg-premium-black/80 z-50 backdrop-blur-md"
               />
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs bg-white p-6 rounded-3xl shadow-xl z-50"
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm glass-premium p-8 rounded-[3rem] border border-white/10 shadow-2xl z-50"
               >
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-slate-800">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-serif font-bold italic text-gold">
                     {editingTeam ? 'Editar Time' : 'Novo Time'}
                   </h3>
-                  <button onClick={handleCloseModal} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
-                    <X size={20} />
+                  <button onClick={handleCloseModal} className="p-2.5 hover:bg-white/10 rounded-2xl text-zinc-500 border border-white/5">
+                    <X size={24} />
                   </button>
                 </div>
 
-                <form onSubmit={handleSaveTeam} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1">Nome do Time</label>
+                <form onSubmit={handleSaveTeam} className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Nome do Time</label>
                     <input
                       type="text"
                       value={teamName}
                       onChange={(e) => setTeamName(e.target.value)}
                       placeholder="Ex: Guerreiros"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                      className="w-full px-6 py-4 rounded-2xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-gold bg-white/5 text-white font-medium placeholder:text-zinc-600"
                       autoFocus
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-2">Cor do Time</label>
-                    <div className="flex gap-3 flex-wrap">
-                      {['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'].map(color => (
+                  <div className="space-y-4">
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Cor do Time</label>
+                    <div className="flex gap-4 flex-wrap">
+                      {['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#D4AF37', '#14b8a6'].map(color => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => setTeamColor(color)}
-                          className={`w-10 h-10 rounded-full transition-transform ${teamColor === color ? 'scale-110 ring-2 ring-offset-2 ring-indigo-500' : 'hover:scale-105'}`}
+                          className={`w-11 h-11 rounded-xl transition-all border-2 ${teamColor === color ? 'scale-110 border-gold shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'border-transparent hover:scale-105'}`}
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -185,7 +214,7 @@ export default function Teams() {
 
                   <button 
                     type="submit" 
-                    className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition active:scale-95 mt-4"
+                    className="w-full bg-gold text-premium-black py-5 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all active:scale-95 mt-6 uppercase tracking-widest"
                   >
                     {editingTeam ? 'Salvar Alterações' : 'Criar Time'}
                   </button>

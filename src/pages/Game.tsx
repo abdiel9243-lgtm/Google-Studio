@@ -1,17 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, Match, Question } from '../lib/api';
 import { 
   Play, 
   Pause, 
-  Check, 
-  X, 
   Clock, 
   BookOpen, 
   LogOut, 
   SkipForward, 
-  Maximize2, 
-  Minimize2,
   Scroll,
   Flame,
   Users,
@@ -23,6 +19,7 @@ import {
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'motion/react';
 import PageTransition from '../components/PageTransition';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Game() {
   const { id } = useParams();
@@ -35,30 +32,70 @@ export default function Game() {
   const [turnIndex, setTurnIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [bigScreen, setBigScreen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    hideCancel?: boolean;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const musicEnabled = localStorage.getItem('musicEnabled') !== 'false';
     if (!musicEnabled) return;
 
-    // Gentle ambient background music
-    const audio = new Audio('https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3'); 
-    audio.loop = true;
-    audio.volume = 0.15;
+    // "Deus Está Aqui" style instrumental (Calm Piano/Worship)
+    // Using local audio file
+    audioRef.current = new Audio('/audio/bg-music.mp3'); 
+    audioRef.current.loop = true;
     
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Auto-play was prevented
-        console.log("Audio autoplay prevented");
-      });
-    }
+    const volume = Number(localStorage.getItem('gameVolume') || '50') / 100;
+    audioRef.current.volume = volume * 0.4; // Scale music volume
+    
+    const playMusic = () => {
+      if (audioRef.current && localStorage.getItem('musicEnabled') !== 'false') {
+        audioRef.current.play().catch(e => {
+          console.log("Audio autoplay prevented, waiting for interaction", e);
+        });
+      }
+    };
+
+    playMusic();
+    window.addEventListener('click', playMusic, { once: true });
 
     return () => {
-      audio.pause();
-      audio.currentTime = 0;
+      window.removeEventListener('click', playMusic);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     };
   }, []);
+
+  // Effect to control playback speed based on timer
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (timerRunning) {
+      if (timer <= 5) {
+        audioRef.current.playbackRate = 1.5; // Fast
+      } else if (timer <= 10) {
+        audioRef.current.playbackRate = 1.2; // Slightly fast
+      } else {
+        audioRef.current.playbackRate = 1.0; // Normal
+      }
+    } else {
+      // Reset speed when timer stops
+      audioRef.current.playbackRate = 1.0;
+    }
+  }, [timer, timerRunning]);
 
   const loadMatch = useCallback(async () => {
     if (!id) return;
@@ -66,6 +103,7 @@ export default function Game() {
     setMatch(data);
     setTimer(data.time_limit || 30);
     setLoading(false);
+    playSound('start');
   }, [id]);
 
   useEffect(() => {
@@ -89,8 +127,17 @@ export default function Game() {
     setLoading(true);
     const question = await api.getNextQuestion(id);
     if (!question) {
-      alert('Fim das perguntas!');
-      navigate(`/results/${id}`);
+      setConfirmModal({
+        isOpen: true,
+        title: 'Fim das Perguntas',
+        message: 'Não há mais perguntas disponíveis. Vamos ver os resultados!',
+        type: 'info',
+        hideCancel: true,
+        onConfirm: () => {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          navigate(`/results/${id}`);
+        }
+      });
       return;
     }
     setCurrentQuestion(question);
@@ -108,21 +155,41 @@ export default function Game() {
   
   const handleStopTimer = () => setTimerRunning(false);
 
-  const playSound = (type: 'correct' | 'wrong') => {
+  const playSound = (type: 'correct' | 'wrong' | 'skip' | 'click' | 'victory' | 'start') => {
     if (localStorage.getItem('soundEnabled') === 'false') return;
     
-    // Reliable sound URLs
-    const url = type === 'correct' 
-      ? 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'
-      : 'https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3';
+    let url = '';
+    switch (type) {
+      case 'correct':
+        url = '/audio/correct.mp3';
+        break;
+      case 'wrong':
+        url = '/audio/wrong.mp3';
+        break;
+      case 'skip':
+        url = '/audio/skip.mp3';
+        break;
+      case 'click':
+        url = '/audio/click.mp3';
+        break;
+      case 'victory':
+        url = '/audio/victory.mp3';
+        break;
+      case 'start':
+        url = '/audio/start.mp3';
+        break;
+    }
       
     const audio = new Audio(url);
+    const volume = Number(localStorage.getItem('gameVolume') || '50') / 100;
+    audio.volume = volume;
     audio.play().catch(e => console.error('Audio play failed:', e));
   };
 
   const handleOptionClick = async (option: string) => {
     if (showAnswer || !currentQuestion) return;
     
+    playSound('click');
     setTimerRunning(false);
     setSelectedOption(option);
     setShowAnswer(true);
@@ -154,6 +221,7 @@ export default function Game() {
     
     // Check for target score win
     if (match.target_score && updatedTeams[turnIndex].score >= match.target_score) {
+      playSound('victory');
       await api.endMatch(match.id);
       navigate(`/results/${match.id}`);
       return;
@@ -168,6 +236,7 @@ export default function Game() {
       
       // Check for max rounds end
       if (match.max_rounds && nextRound > match.max_rounds) {
+        playSound('victory');
         await api.endMatch(match.id);
         navigate(`/results/${match.id}`);
         return;
@@ -186,53 +255,74 @@ export default function Game() {
     
     const currentTeam = match.teams[turnIndex];
     if ((currentTeam.skips_used || 0) >= (match.skips_allowed || 0)) {
-      alert('Você não tem mais pulos disponíveis!');
+      setConfirmModal({
+        isOpen: true,
+        title: 'Sem Pulos',
+        message: 'Seu time já utilizou todos os pulos permitidos para esta partida.',
+        type: 'info',
+        hideCancel: true,
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
-    if (!confirm('Deseja realmente pular esta pergunta?')) return;
-
-    setTimerRunning(false);
-    await api.updateScore(match.id, currentTeam.id, 0, true);
-    
-    const updatedTeams = [...match.teams];
-    updatedTeams[turnIndex].skips_used = (updatedTeams[turnIndex].skips_used || 0) + 1;
-    
-    const nextTurnIndex = (turnIndex + 1) % match.teams.length;
-    let nextRound = match.current_round || 1;
-
-    if (nextTurnIndex === 0) {
-      nextRound += 1;
-      if (match.max_rounds && nextRound > match.max_rounds) {
-        await api.endMatch(match.id);
-        navigate(`/results/${match.id}`);
-        return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Pular Pergunta?',
+      message: 'Deseja realmente pular esta pergunta? Você não ganhará pontos, mas poderá tentar outra.',
+      type: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setTimerRunning(false);
+        playSound('skip');
+        
+        // Update score in API (0 points, but mark as skip)
+        await api.updateScore(match.id, currentTeam.id, 0, true);
+        
+        // Update local state for skips_used
+        const updatedTeams = [...match.teams];
+        updatedTeams[turnIndex].skips_used = (updatedTeams[turnIndex].skips_used || 0) + 1;
+        
+        setMatch({ ...match, teams: updatedTeams });
+        
+        // Stay on the same team (turnIndex remains the same)
+        // Just load a new question
+        nextQuestion();
       }
-      await api.updateRound(match.id, nextRound);
-    }
-
-    setMatch({ ...match, teams: updatedTeams, current_round: nextRound });
-    setTurnIndex(nextTurnIndex);
-    nextQuestion();
+    });
   };
 
   const handleGoHome = () => {
-    if (window.confirm('Voltar para a tela inicial? O progresso atual será perdido.')) {
-      navigate('/');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Sair do Jogo?',
+      message: 'Voltar para a tela inicial? O progresso atual desta partida será perdido.',
+      type: 'danger',
+      onConfirm: () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        navigate('/');
+      }
+    });
   };
 
   const handleEndGame = async () => {
     if (!match || !id) return;
-    if (window.confirm('Deseja realmente encerrar a partida agora? Irá para a tela de resultados.')) {
-      try {
-        await api.endMatch(id);
-        navigate(`/results/${id}`);
-      } catch (error) {
-        console.error("Error ending match:", error);
-        navigate(`/results/${id}`);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Encerrar Partida?',
+      message: 'Deseja realmente encerrar a partida agora? Você será direcionado para a tela de resultados.',
+      type: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await api.endMatch(id);
+          navigate(`/results/${id}`);
+        } catch (error) {
+          console.error("Error ending match:", error);
+          navigate(`/results/${id}`);
+        }
       }
-    }
+    });
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen text-slate-500">Carregando...</div>;
@@ -278,227 +368,85 @@ export default function Game() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-stone-50 text-slate-900 pb-safe pt-safe relative overflow-hidden">
+      <div className="min-h-screen bg-premium-black text-zinc-100 pb-safe pt-safe relative overflow-hidden">
+        {/* Confirmation Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          hideCancel={confirmModal.hideCancel}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        />
+
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(#444 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(var(--color-gold) 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' }} />
         </div>
         
-        {/* Big Screen Toggle */}
-        <button 
-          onClick={() => setBigScreen(!bigScreen)}
-          className="fixed bottom-6 left-6 bg-white text-indigo-600 px-4 py-3 rounded-full font-bold text-sm hover:bg-indigo-50 transition z-50 flex items-center gap-2 border border-indigo-100 shadow-lg"
-        >
-          {bigScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          {bigScreen ? 'Sair do Telão' : 'Modo Telão'}
-        </button>
-
-        {/* Big Screen Overlay */}
-        <AnimatePresence>
-          {bigScreen && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-stone-950 z-[100] flex flex-col p-10 text-stone-100 overflow-hidden"
-            >
-              {/* Background Decoration */}
-              <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden">
-                <div className="absolute -top-24 -left-24 w-96 h-96 border-8 border-stone-100 rounded-full" />
-                <div className="absolute -bottom-48 -right-48 w-[600px] h-[600px] border-4 border-stone-100 rounded-full" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full flex items-center justify-center">
-                  <Scroll size={800} className="text-stone-100 opacity-10" />
-                </div>
-              </div>
-
-              {/* Big Screen Header */}
-              <div className="flex justify-between items-start mb-12 relative z-10">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-4">
-                    <button 
-                      onClick={handleGoHome}
-                      className="p-3 bg-stone-800 text-stone-400 rounded-full hover:bg-stone-700 hover:text-white transition"
-                      title="Voltar ao Início"
-                    >
-                      <Home size={28} />
-                    </button>
-                    <button 
-                      onClick={handleEndGame}
-                      className="p-3 bg-stone-800 text-stone-400 rounded-full hover:bg-stone-700 hover:text-red-400 transition"
-                      title="Encerrar Partida"
-                    >
-                      <LogOut size={28} />
-                    </button>
-                    <p className="text-amber-500 font-bold uppercase tracking-[0.3em] text-xl">Desafio Bíblico</p>
-                  </div>
-                  <h2 className="text-5xl font-serif italic">Rodada {currentRound} / {maxRounds}</h2>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-4 text-8xl font-mono font-black text-amber-500">
-                    <Clock size={70} />
-                    {timer.toString().padStart(2, '0')}s
-                  </div>
-                </div>
-              </div>
-
-              {/* Big Screen Content */}
-              <div className="flex-1 flex flex-col justify-center items-center text-center max-w-6xl mx-auto space-y-12 relative z-10">
-                <AnimatePresence mode="wait">
-                  {!currentQuestion ? (
-                    <motion.div 
-                      key="no-q"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="space-y-8"
-                    >
-                      <div className="w-32 h-32 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto border-2 border-amber-500/20">
-                        <Scroll size={64} className="text-amber-500" />
-                      </div>
-                      <h3 className="text-7xl font-serif font-bold text-stone-200">Preparem-se...</h3>
-                      <p className="text-4xl text-stone-400">É a vez do time <span className="text-amber-500 font-bold">{currentTeam.name}</span></p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key={currentQuestion.id}
-                      initial={{ opacity: 0, y: 40 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -40 }}
-                      transition={{ duration: 0.5 }}
-                      className="space-y-12 w-full"
-                    >
-                      <div className="space-y-6">
-                        <div className="inline-flex items-center gap-3 bg-amber-600 px-8 py-3 rounded-full text-2xl font-bold uppercase tracking-widest mb-4 shadow-xl">
-                          {getCategoryIcon(currentQuestion.category)}
-                          {getCategoryLabel(currentQuestion.category)}
-                        </div>
-                        <h2 className="text-8xl font-serif font-bold leading-tight text-stone-50 drop-shadow-2xl">
-                          {currentQuestion.text}
-                        </h2>
-                      </div>
-
-                      {showAnswer && (
-                        <motion.div 
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="bg-stone-900/80 backdrop-blur-md p-10 rounded-[3rem] border-2 border-amber-500/30 inline-block shadow-2xl"
-                        >
-                          <p className="text-amber-400 text-2xl font-bold uppercase tracking-[0.2em] mb-4">Referência Bíblica</p>
-                          <p className="text-6xl font-serif font-bold italic text-stone-100">{currentQuestion.reference}</p>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Big Screen Footer - Scoreboard */}
-              <div className="grid grid-cols-2 gap-10 mt-12 relative z-10">
-                {match.teams.map((team, idx) => {
-                  const isActive = idx === turnIndex;
-                  return (
-                    <div 
-                      key={team.id}
-                      className={clsx(
-                        "p-10 rounded-[3rem] border-4 transition-all flex items-center justify-between",
-                        isActive 
-                          ? "bg-stone-800 border-amber-500 shadow-[0_0_60px_rgba(245,158,11,0.2)]" 
-                          : "bg-stone-900 border-stone-800 opacity-40"
-                      )}
-                    >
-                      <div className="flex items-center gap-8">
-                        <div 
-                          className="w-24 h-24 rounded-full flex items-center justify-center text-5xl font-black shadow-2xl border-4 border-white/10"
-                          style={{ backgroundColor: team.color }}
-                        >
-                          {team.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-3xl font-serif font-bold text-stone-100">{team.name}</p>
-                          <div className="flex gap-3 mt-3">
-                            {match.skips_allowed ? Array.from({ length: match.skips_allowed }).map((_, i) => (
-                              <div 
-                                key={i} 
-                                className={clsx(
-                                  "w-5 h-5 rounded-full border-2",
-                                  i < (team.skips_used || 0) ? "bg-stone-700 border-stone-600" : "bg-amber-500 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
-                                )} 
-                              />
-                            )) : null}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-8xl font-black text-amber-500">{team.score}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Header Section */}
-        <div className="bg-white pb-3 pt-2 px-4 shadow-sm rounded-b-3xl mb-4 relative z-10">
-          <div className="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
+        <div className="glass-premium pb-4 pt-4 px-4 rounded-b-[2.5rem] mb-6 relative z-10 border-b border-white/10">
+          <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
             <div className="flex gap-3">
               <button 
                 onClick={handleGoHome}
-                className="p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition active:scale-95"
+                className="p-2.5 bg-white/5 text-zinc-400 rounded-2xl hover:bg-white/10 transition active:scale-95 border border-white/5"
                 title="Voltar ao Início"
               >
                 <Home size={20} />
               </button>
               <button 
                 onClick={handleEndGame}
-                className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition active:scale-95"
+                className="p-2.5 bg-red-500/10 text-red-400 rounded-2xl hover:bg-red-500/20 transition active:scale-95 border border-red-500/10"
                 title="Encerrar Partida"
               >
                 <LogOut size={20} />
               </button>
             </div>
-            <span className="font-bold text-slate-800 text-sm uppercase tracking-wider truncate max-w-[150px]">
+            <span className="font-serif italic text-gold text-lg tracking-wide truncate max-w-[180px]">
               {match.mode === 'thematic' && match.category_filter ? match.category_filter : 'Desafio Bíblico'}
             </span>
-            <div className="w-8" /> {/* Spacer for balance */}
+            <div className="w-10" /> {/* Spacer for balance */}
           </div>
 
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Rodada {currentRound} / {maxRounds}</span>
-            <div className="flex items-center gap-1.5 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-              <Clock size={14} />
-              <span className="text-lg font-mono font-bold tracking-wider">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-zinc-500 font-bold text-[10px] uppercase tracking-[0.2em]">Rodada {currentRound} <span className="opacity-30">/</span> {maxRounds}</span>
+            <div className="flex items-center gap-2 text-gold bg-gold/10 px-4 py-1.5 rounded-full border border-gold/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+              <Clock size={14} className="animate-pulse" />
+              <span className="text-xl font-mono font-bold tracking-tighter">
                 {timer.toString().padStart(2, '0')}s
               </span>
             </div>
           </div>
           
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-4">
             {match.teams.map((team, idx) => {
               const isActive = idx === turnIndex;
               return (
                 <motion.div 
                   key={team.id}
                   animate={{ 
-                    scale: isActive ? 1.02 : 1,
-                    opacity: isActive ? 1 : 0.6
+                    scale: isActive ? 1.05 : 1,
+                    opacity: isActive ? 1 : 0.4
                   }}
                   className={clsx(
-                    "flex flex-col items-center justify-center flex-1 h-16 rounded-xl transition-colors border-2 relative overflow-hidden",
+                    "flex flex-col items-center justify-center flex-1 h-20 rounded-2xl transition-all border relative overflow-hidden",
                     isActive 
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-sm" 
-                      : "bg-white text-slate-600 border-slate-200"
+                      ? "bg-gold text-premium-black border-gold shadow-[0_0_25px_rgba(212,175,55,0.3)]" 
+                      : "bg-white/5 text-zinc-400 border-white/10"
                   )}
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-tight opacity-80 truncate w-full text-center px-1">{team.name}</span>
-                  <span className="text-lg font-black">{team.score} <span className="text-[10px] font-normal">pts</span></span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest opacity-80 truncate w-full text-center px-2 mb-1">{team.name}</span>
+                  <span className="text-xl font-black">{team.score} <span className="text-[10px] font-normal opacity-60">pts</span></span>
                   {match.skips_allowed ? (
-                    <div className="flex gap-0.5 mt-0.5">
+                    <div className="flex gap-1 mt-1.5">
                       {Array.from({ length: match.skips_allowed }).map((_, i) => (
                         <div 
                           key={i} 
                           className={clsx(
-                            "w-1 h-1 rounded-full",
-                            i < (team.skips_used || 0) ? "bg-slate-300" : "bg-yellow-400"
+                            "w-1.5 h-1.5 rounded-full",
+                            i < (team.skips_used || 0) ? "bg-black/20" : isActive ? "bg-premium-black" : "bg-gold/40"
                           )} 
                         />
                       ))}
@@ -510,11 +458,11 @@ export default function Game() {
           </div>
         </div>
 
-        <div className="px-4 max-w-md mx-auto space-y-4 pb-24">
+        <div className="px-4 relative z-10 max-w-2xl mx-auto">
           {/* Turn Indicator */}
-          <div className="bg-stone-100/80 backdrop-blur-sm rounded-2xl py-2 px-4 flex items-center justify-center gap-2 border border-stone-200 shadow-sm">
-            <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: currentTeam.color }} />
-            <span className="text-stone-600 text-xs font-medium">Vez de: <span className="font-bold text-stone-900">{currentTeam.name}</span></span>
+          <div className="glass rounded-2xl py-2 px-4 flex items-center justify-center gap-3 border border-white/5 mb-6">
+            <div className="w-3 h-3 rounded-full animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.5)]" style={{ backgroundColor: currentTeam.color || '#D4AF37' }} />
+            <span className="text-zinc-400 text-xs font-medium uppercase tracking-widest">Vez de: <span className="font-bold text-white">{currentTeam.name}</span></span>
           </div>
 
           <AnimatePresence mode="wait">
@@ -522,57 +470,56 @@ export default function Game() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center py-10"
+                className="flex flex-col items-center py-12"
               >
                 <button 
                   onClick={nextQuestion} 
-                  className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-xl font-bold shadow-lg hover:bg-indigo-700 transition flex items-center gap-3 w-full justify-center"
+                  className="bg-gold text-premium-black px-10 py-4 rounded-2xl text-xl font-black shadow-[0_0_40px_rgba(212,175,55,0.3)] hover:scale-105 transition flex items-center gap-4 w-full justify-center"
                 >
-                  <Play size={28} fill="currentColor" />
-                  Iniciar Rodada
+                  <Play size={32} fill="currentColor" />
+                  INICIAR RODADA
                 </button>
               </motion.div>
             ) : (
               <motion.div
                 key={currentQuestion.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="space-y-6"
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="space-y-8"
               >
                 {/* Metadata Badges */}
-                <div className="flex justify-center gap-2 flex-wrap">
-                  <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-orange-200">
+                <div className="flex justify-center gap-3 flex-wrap">
+                  <span className="bg-white/5 text-zinc-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10">
                     {currentQuestion.difficulty === 'easy' ? 'Fácil' : currentQuestion.difficulty === 'medium' ? 'Médio' : 'Difícil'}
                   </span>
-                  <span className="bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-stone-200 flex items-center gap-1.5">
+                  <span className="bg-gold/10 text-gold px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-gold/20 flex items-center gap-2">
                     {getCategoryIcon(currentQuestion.category)}
                     {getCategoryLabel(currentQuestion.category)}
                   </span>
-                  <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-amber-200">
-                    10 pts
+                  <span className="bg-white/5 text-zinc-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10">
+                    10 PTS
                   </span>
                 </div>
 
                 {/* Question Card */}
-                <div className="bg-white p-5 rounded-[2rem] shadow-lg text-center space-y-3 border-b-4 border-stone-200 relative overflow-hidden">
-                  {/* Decorative corner */}
-                  <div className="absolute top-0 right-0 w-12 h-12 bg-stone-50 rounded-bl-full border-l border-b border-stone-100" />
+                <div className="glass-premium p-8 rounded-[2.5rem] text-center space-y-6 border border-white/10 relative overflow-hidden shadow-2xl">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
                   
-                  <h2 className="text-xl font-serif font-bold text-stone-800 leading-relaxed relative z-10">
+                  <h2 className="text-2xl font-serif font-bold text-white leading-relaxed relative z-10">
                     {currentQuestion.text}
                   </h2>
                   
                   {showAnswer && (
                     <motion.div 
-                      initial={{ opacity: 0, y: 5 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex flex-col items-center gap-1 bg-amber-50 p-3 rounded-xl border border-amber-100 relative z-10"
+                      className="flex flex-col items-center gap-2 bg-gold/5 p-4 rounded-2xl border border-gold/10 relative z-10"
                     >
-                      <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">Referência Bíblica</p>
-                      <div className="flex items-center gap-2 text-stone-700 font-serif font-bold italic text-base">
-                        <BookOpen size={16} className="text-amber-500" />
+                      <p className="text-[9px] font-bold text-gold uppercase tracking-[0.3em]">Referência Bíblica</p>
+                      <div className="flex items-center gap-3 text-white font-serif font-bold italic text-lg">
+                        <BookOpen size={20} className="text-gold" />
                         {currentQuestion.reference}
                       </div>
                     </motion.div>
@@ -580,62 +527,69 @@ export default function Game() {
                 </div>
 
                 {/* Timer Controls Inline */}
-                {!timerRunning && timer > 0 && !showAnswer ? (
-                  <button 
-                    onClick={handleStartTimer}
-                    className="w-full bg-green-500 text-white py-3 rounded-2xl font-bold text-lg shadow-lg hover:bg-green-600 transition flex items-center justify-center gap-2"
-                  >
-                    <Play fill="currentColor" size={24} /> INICIAR TEMPO
-                  </button>
-                ) : timerRunning ? (
-                  <button 
-                    onClick={handleStopTimer}
-                    className="w-full bg-yellow-500 text-white py-3 rounded-2xl font-bold text-lg shadow-lg hover:bg-yellow-600 transition flex items-center justify-center gap-2"
-                  >
-                    <Pause fill="currentColor" size={24} /> PAUSAR TEMPO
-                  </button>
-                ) : null}
+                <div className="flex justify-center">
+                  {!timerRunning && timer > 0 && !showAnswer ? (
+                    <button 
+                      onClick={handleStartTimer}
+                      className="w-full bg-gold text-premium-black py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
+                    >
+                      <Play fill="currentColor" size={28} /> INICIAR TEMPO
+                    </button>
+                  ) : timerRunning ? (
+                    <button 
+                      onClick={handleStopTimer}
+                      className="w-full bg-white/10 text-white py-5 rounded-2xl font-bold text-lg border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-3"
+                    >
+                      <Pause fill="currentColor" size={28} /> PAUSAR TEMPO
+                    </button>
+                  ) : null}
+                </div>
 
                 {/* Options List */}
                 {currentQuestion.options && (
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 gap-4">
                     {currentQuestion.options.map((option: string, idx: number) => (
                       <button
                         key={idx}
                         onClick={() => handleOptionClick(option)}
                         disabled={showAnswer || !timerRunning}
                         className={clsx(
-                          "w-full p-3 rounded-xl border-2 flex items-center gap-3 transition-all text-left relative overflow-hidden",
+                          "w-full p-5 rounded-2xl border-2 flex items-center gap-4 transition-all text-left relative overflow-hidden group",
                           showAnswer && option === currentQuestion.correct_answer 
-                            ? "bg-green-100 border-green-500 text-green-800"
+                            ? "bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                             : showAnswer && option === selectedOption && option !== currentQuestion.correct_answer
-                            ? "bg-red-100 border-red-500 text-red-800"
+                            ? "bg-red-500/20 border-red-500 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                             : selectedOption === option
-                            ? "bg-indigo-100 border-indigo-500 text-indigo-900 ring-1 ring-indigo-500"
-                            : !timerRunning ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed" : getOptionColor(idx)
+                            ? "bg-gold/20 border-gold text-gold shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                            : !timerRunning ? "bg-white/5 border-white/5 text-zinc-600 cursor-not-allowed" : "bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10 text-zinc-300"
                         )}
                       >
                         <div className={clsx(
-                          "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                          selectedOption === option ? "border-indigo-600 bg-indigo-600" : "border-current opacity-50"
+                          "w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 font-bold text-sm transition-all",
+                          selectedOption === option ? "bg-gold border-gold text-premium-black" : "border-white/10 bg-white/5 text-zinc-500 group-hover:border-gold/50 group-hover:text-gold"
                         )}>
-                          {selectedOption === option && <div className="w-2 h-2 bg-white rounded-full" />}
+                          {String.fromCharCode(65 + idx)}
                         </div>
-                        <span className="font-semibold opacity-60 mr-1">{String.fromCharCode(65 + idx)})</span>
-                        <span className="font-medium">{option}</span>
+                        <span className="font-medium tracking-tight text-lg">{option}</span>
+                        
+                        {showAnswer && option === currentQuestion.correct_answer && (
+                          <div className="ml-auto w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>
                 )}
 
                 {/* Answer Controls */}
-                <div className="flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-4 pt-4">
                   {match.skips_allowed && (currentTeam.skips_used || 0) < match.skips_allowed && !showAnswer && (
                     <button 
                       onClick={handleSkip}
-                      className="w-full bg-yellow-100 text-yellow-700 py-3 rounded-2xl font-bold hover:bg-yellow-200 transition flex items-center justify-center gap-2 border border-yellow-200"
+                      className="w-full glass py-5 rounded-2xl font-bold text-zinc-400 hover:text-gold hover:bg-white/10 transition-all flex items-center justify-center gap-3 border border-white/5"
                     >
-                      <SkipForward size={20} /> Pular Pergunta ({match.skips_allowed - (currentTeam.skips_used || 0)} restantes)
+                      <SkipForward size={22} /> Pular Pergunta ({match.skips_allowed - (currentTeam.skips_used || 0)} restantes)
                     </button>
                   )}
                 </div>

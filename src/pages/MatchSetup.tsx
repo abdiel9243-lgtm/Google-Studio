@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api, Team } from '../lib/api';
 import { 
   Play, 
-  ArrowLeft, 
   Zap, 
   Trophy, 
   Sliders, 
@@ -21,16 +20,17 @@ import {
 import PageTransition from '../components/PageTransition';
 import { motion } from 'motion/react';
 import clsx from 'clsx';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
       onClick={() => onChange(!checked)}
-      className={`w-12 h-7 rounded-full transition-colors p-1 flex items-center ${checked ? 'bg-indigo-500' : 'bg-slate-300'}`}
+      className={`w-14 h-8 rounded-full transition-all p-1.5 flex items-center border ${checked ? 'bg-gold border-gold' : 'bg-white/5 border-white/10'}`}
     >
       <motion.div 
         layout
-        className="w-5 h-5 bg-white rounded-full shadow-sm"
+        className={`w-5 h-5 rounded-full shadow-lg ${checked ? 'bg-premium-black' : 'bg-zinc-500'}`}
       />
     </button>
   );
@@ -54,19 +54,19 @@ function NumberControl({
   suffix: string;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         {label}
-        <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
+        <span className="bg-gold/10 text-gold px-4 py-1.5 rounded-xl text-xs font-bold border border-gold/20 shadow-[0_0_10px_rgba(212,175,55,0.1)]">
           {value} {suffix}
         </span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <button 
           onClick={() => onChange(Math.max(min, value - step))}
-          className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 active:scale-95 transition touch-manipulation"
+          className="w-14 h-14 rounded-2xl bg-white/5 text-zinc-400 flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all border border-white/10"
         >
-          <Minus size={20} />
+          <Minus size={24} />
         </button>
         <div className="flex-1 px-2">
           <input 
@@ -76,14 +76,14 @@ function NumberControl({
             step={step}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
-            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+            className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-gold"
           />
         </div>
         <button 
           onClick={() => onChange(Math.min(max, value + step))}
-          className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 active:scale-95 transition touch-manipulation"
+          className="w-14 h-14 rounded-2xl bg-white/5 text-zinc-400 flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all border border-white/10"
         >
-          <Plus size={20} />
+          <Plus size={24} />
         </button>
       </div>
     </div>
@@ -102,6 +102,19 @@ export default function MatchSetup() {
   const [skipsAllowed, setSkipsAllowed] = useState(3);
   const [useSkips, setUseSkips] = useState(true);
   const [category, setCategory] = useState('all');
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    hideCancel?: boolean;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     api.getTeams().then(setTeams);
@@ -116,7 +129,17 @@ export default function MatchSetup() {
   };
 
   const handleStart = async () => {
-    if (selectedTeams.length < 1) return alert('Selecione pelo menos 1 time');
+    if (selectedTeams.length < 1) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Seleção Necessária',
+        message: 'Por favor, selecione pelo menos 1 time para iniciar a partida.',
+        type: 'info',
+        hideCancel: true,
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
+      return;
+    }
     
     let finalMaxRounds = maxRounds;
     let finalTimeLimit = timeLimit;
@@ -151,150 +174,163 @@ export default function MatchSetup() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-slate-50 pb-32">
+      <div className="min-h-screen bg-premium-black pb-32">
+        {/* Confirmation Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          hideCancel={confirmModal.hideCancel}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        />
         
-        <div className="space-y-6 max-w-md mx-auto">
+        <div className="space-y-10 max-w-md mx-auto p-4">
           
           {/* Game Mode */}
-          <section className="space-y-3">
-            <h3 className="text-indigo-600 font-semibold px-1">Modo de Jogo</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <section className="space-y-4">
+            <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+              <Zap size={18} />
+              <span>Modo de Jogo</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Quick Mode */}
               <button
                 onClick={() => setMode('quick')}
                 className={clsx(
-                  "p-4 rounded-3xl border-2 flex flex-col items-start gap-3 transition-all touch-manipulation relative overflow-hidden",
+                  "p-5 rounded-[2rem] border-2 flex flex-col items-start gap-4 transition-all touch-manipulation relative overflow-hidden group",
                   mode === 'quick' 
-                    ? "bg-green-50 border-green-500 shadow-sm" 
-                    : "bg-white border-white shadow-sm hover:bg-slate-50"
+                    ? "bg-gold/10 border-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]" 
+                    : "glass-premium border-white/10 hover:border-white/20"
                 )}
               >
                 <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  mode === 'quick' ? "bg-green-200 text-green-700" : "bg-green-100 text-green-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all",
+                  mode === 'quick' ? "bg-gold text-premium-black shadow-lg" : "bg-white/5 text-zinc-400 group-hover:text-gold"
                 )}>
-                  <Zap size={20} fill="currentColor" />
+                  <Zap size={24} fill={mode === 'quick' ? "currentColor" : "none"} />
                 </div>
                 <div className="text-left">
-                  <p className={clsx("font-bold text-lg", mode === 'quick' ? "text-green-800" : "text-slate-800")}>Rápido</p>
-                  <p className={clsx("text-xs", mode === 'quick' ? "text-green-600" : "text-slate-500")}>10 rodadas rápidas</p>
+                  <p className={clsx("font-serif font-bold text-xl italic", mode === 'quick' ? "text-gold" : "text-zinc-200")}>Rápido</p>
+                  <p className={clsx("text-[10px] font-bold uppercase tracking-widest", mode === 'quick' ? "text-gold/60" : "text-zinc-500")}>10 rodadas rápidas</p>
                 </div>
-                {mode === 'quick' && <div className="absolute top-4 right-4 text-green-500"><CheckCircle2 size={20} /></div>}
+                {mode === 'quick' && <div className="absolute top-5 right-5 text-gold"><CheckCircle2 size={20} /></div>}
               </button>
 
               {/* Classic Mode */}
               <button
                 onClick={() => setMode('classic')}
                 className={clsx(
-                  "p-4 rounded-3xl border-2 flex flex-col items-start gap-3 transition-all touch-manipulation relative overflow-hidden",
+                  "p-5 rounded-[2rem] border-2 flex flex-col items-start gap-4 transition-all touch-manipulation relative overflow-hidden group",
                   mode === 'classic' 
-                    ? "bg-blue-50 border-blue-500 shadow-sm" 
-                    : "bg-white border-white shadow-sm hover:bg-slate-50"
+                    ? "bg-gold/10 border-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]" 
+                    : "glass-premium border-white/10 hover:border-white/20"
                 )}
               >
                 <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  mode === 'classic' ? "bg-blue-200 text-blue-700" : "bg-blue-100 text-blue-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all",
+                  mode === 'classic' ? "bg-gold text-premium-black shadow-lg" : "bg-white/5 text-zinc-400 group-hover:text-gold"
                 )}>
-                  <BookOpen size={20} />
+                  <BookOpen size={24} />
                 </div>
                 <div className="text-left">
-                  <p className={clsx("font-bold text-lg", mode === 'classic' ? "text-blue-800" : "text-slate-800")}>Clássico</p>
-                  <p className={clsx("text-xs", mode === 'classic' ? "text-blue-600" : "text-slate-500")}>20 rodadas padrão</p>
+                  <p className={clsx("font-serif font-bold text-xl italic", mode === 'classic' ? "text-gold" : "text-zinc-200")}>Clássico</p>
+                  <p className={clsx("text-[10px] font-bold uppercase tracking-widest", mode === 'classic' ? "text-gold/60" : "text-zinc-500")}>20 rodadas padrão</p>
                 </div>
-                {mode === 'classic' && <div className="absolute top-4 right-4 text-blue-500"><CheckCircle2 size={20} /></div>}
+                {mode === 'classic' && <div className="absolute top-5 right-5 text-gold"><CheckCircle2 size={20} /></div>}
               </button>
 
               {/* Speed Round */}
               <button
                 onClick={() => setMode('speed')}
                 className={clsx(
-                  "p-4 rounded-3xl border-2 flex flex-col items-start gap-3 transition-all touch-manipulation relative overflow-hidden",
+                  "p-5 rounded-[2rem] border-2 flex flex-col items-start gap-4 transition-all touch-manipulation relative overflow-hidden group",
                   mode === 'speed' 
-                    ? "bg-red-50 border-red-500 shadow-sm" 
-                    : "bg-white border-white shadow-sm hover:bg-slate-50"
+                    ? "bg-gold/10 border-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]" 
+                    : "glass-premium border-white/10 hover:border-white/20"
                 )}
               >
                 <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  mode === 'speed' ? "bg-red-200 text-red-700" : "bg-red-100 text-red-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all",
+                  mode === 'speed' ? "bg-gold text-premium-black shadow-lg" : "bg-white/5 text-zinc-400 group-hover:text-gold"
                 )}>
-                  <Timer size={20} />
+                  <Timer size={24} />
                 </div>
                 <div className="text-left">
-                  <p className={clsx("font-bold text-lg", mode === 'speed' ? "text-red-800" : "text-slate-800")}>Speed</p>
-                  <p className={clsx("text-xs", mode === 'speed' ? "text-red-600" : "text-slate-500")}>15s por pergunta</p>
+                  <p className={clsx("font-serif font-bold text-xl italic", mode === 'speed' ? "text-gold" : "text-zinc-200")}>Speed</p>
+                  <p className={clsx("text-[10px] font-bold uppercase tracking-widest", mode === 'speed' ? "text-gold/60" : "text-zinc-500")}>15s por pergunta</p>
                 </div>
-                {mode === 'speed' && <div className="absolute top-4 right-4 text-red-500"><CheckCircle2 size={20} /></div>}
+                {mode === 'speed' && <div className="absolute top-5 right-5 text-gold"><CheckCircle2 size={20} /></div>}
               </button>
 
               {/* Thematic Mode */}
               <button
                 onClick={() => setMode('thematic')}
                 className={clsx(
-                  "p-4 rounded-3xl border-2 flex flex-col items-start gap-3 transition-all touch-manipulation relative overflow-hidden",
+                  "p-5 rounded-[2rem] border-2 flex flex-col items-start gap-4 transition-all touch-manipulation relative overflow-hidden group",
                   mode === 'thematic' 
-                    ? "bg-purple-50 border-purple-500 shadow-sm" 
-                    : "bg-white border-white shadow-sm hover:bg-slate-50"
+                    ? "bg-gold/10 border-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]" 
+                    : "glass-premium border-white/10 hover:border-white/20"
                 )}
               >
                 <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  mode === 'thematic' ? "bg-purple-200 text-purple-700" : "bg-purple-100 text-purple-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all",
+                  mode === 'thematic' ? "bg-gold text-premium-black shadow-lg" : "bg-white/5 text-zinc-400 group-hover:text-gold"
                 )}>
-                  <Tags size={20} />
+                  <Tags size={24} />
                 </div>
                 <div className="text-left">
-                  <p className={clsx("font-bold text-lg", mode === 'thematic' ? "text-purple-800" : "text-slate-800")}>Temático</p>
-                  <p className={clsx("text-xs", mode === 'thematic' ? "text-purple-600" : "text-slate-500")}>Escolha o tema</p>
+                  <p className={clsx("font-serif font-bold text-xl italic", mode === 'thematic' ? "text-gold" : "text-zinc-200")}>Temático</p>
+                  <p className={clsx("text-[10px] font-bold uppercase tracking-widest", mode === 'thematic' ? "text-gold/60" : "text-zinc-500")}>Escolha o tema</p>
                 </div>
-                {mode === 'thematic' && <div className="absolute top-4 right-4 text-purple-500"><CheckCircle2 size={20} /></div>}
+                {mode === 'thematic' && <div className="absolute top-5 right-5 text-gold"><CheckCircle2 size={20} /></div>}
               </button>
 
               {/* Championship Mode */}
               <button
                 onClick={() => setMode('championship')}
                 className={clsx(
-                  "p-4 rounded-3xl border-2 flex flex-col items-start gap-3 transition-all touch-manipulation relative overflow-hidden",
+                  "p-5 rounded-[2rem] border-2 flex flex-col items-start gap-4 transition-all touch-manipulation relative overflow-hidden group",
                   mode === 'championship' 
-                    ? "bg-yellow-50 border-yellow-500 shadow-sm" 
-                    : "bg-white border-white shadow-sm hover:bg-slate-50"
+                    ? "bg-gold/10 border-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]" 
+                    : "glass-premium border-white/10 hover:border-white/20"
                 )}
               >
                 <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  mode === 'championship' ? "bg-yellow-200 text-yellow-700" : "bg-yellow-100 text-yellow-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all",
+                  mode === 'championship' ? "bg-gold text-premium-black shadow-lg" : "bg-white/5 text-zinc-400 group-hover:text-gold"
                 )}>
-                  <Trophy size={20} fill="currentColor" />
+                  <Trophy size={24} fill={mode === 'championship' ? "currentColor" : "none"} />
                 </div>
                 <div className="text-left">
-                  <p className={clsx("font-bold text-lg", mode === 'championship' ? "text-yellow-800" : "text-slate-800")}>Campeonato</p>
-                  <p className={clsx("text-xs", mode === 'championship' ? "text-yellow-600" : "text-slate-500")}>Pontuação alvo</p>
+                  <p className={clsx("font-serif font-bold text-xl italic", mode === 'championship' ? "text-gold" : "text-zinc-200")}>Campeonato</p>
+                  <p className={clsx("text-[10px] font-bold uppercase tracking-widest", mode === 'championship' ? "text-gold/60" : "text-zinc-500")}>Pontuação alvo</p>
                 </div>
-                {mode === 'championship' && <div className="absolute top-4 right-4 text-yellow-500"><CheckCircle2 size={20} /></div>}
+                {mode === 'championship' && <div className="absolute top-5 right-5 text-gold"><CheckCircle2 size={20} /></div>}
               </button>
 
               {/* Custom Mode */}
               <button
                 onClick={() => setMode('custom')}
                 className={clsx(
-                  "p-4 rounded-3xl border-2 flex flex-col items-start gap-3 transition-all touch-manipulation relative overflow-hidden",
+                  "p-5 rounded-[2rem] border-2 flex flex-col items-start gap-4 transition-all touch-manipulation relative overflow-hidden group",
                   mode === 'custom' 
-                    ? "bg-indigo-50 border-indigo-500 shadow-sm" 
-                    : "bg-white border-white shadow-sm hover:bg-slate-50"
+                    ? "bg-gold/10 border-gold shadow-[0_0_20px_rgba(212,175,55,0.15)]" 
+                    : "glass-premium border-white/10 hover:border-white/20"
                 )}
               >
                 <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  mode === 'custom' ? "bg-indigo-200 text-indigo-700" : "bg-indigo-100 text-indigo-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all",
+                  mode === 'custom' ? "bg-gold text-premium-black shadow-lg" : "bg-white/5 text-zinc-400 group-hover:text-gold"
                 )}>
-                  <Sliders size={20} />
+                  <Sliders size={24} />
                 </div>
                 <div className="text-left">
-                  <p className={clsx("font-bold text-lg", mode === 'custom' ? "text-indigo-800" : "text-slate-800")}>Custom</p>
-                  <p className={clsx("text-xs", mode === 'custom' ? "text-indigo-600" : "text-slate-500")}>Configure tudo</p>
+                  <p className={clsx("font-serif font-bold text-xl italic", mode === 'custom' ? "text-gold" : "text-zinc-200")}>Custom</p>
+                  <p className={clsx("text-[10px] font-bold uppercase tracking-widest", mode === 'custom' ? "text-gold/60" : "text-zinc-500")}>Configure tudo</p>
                 </div>
-                {mode === 'custom' && <div className="absolute top-4 right-4 text-indigo-500"><CheckCircle2 size={20} /></div>}
+                {mode === 'custom' && <div className="absolute top-5 right-5 text-gold"><CheckCircle2 size={20} /></div>}
               </button>
             </div>
           </section>
@@ -304,32 +340,35 @@ export default function MatchSetup() {
             <motion.section 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              className="space-y-3"
+              className="space-y-4"
             >
-              <h3 className="text-indigo-600 font-semibold px-1">Escolha o Tema</h3>
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+              <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+                <Tags size={18} />
+                <span>Escolha o Tema</span>
+              </div>
+              <div className="glass-premium rounded-[2rem] border border-white/10 p-6 shadow-xl">
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                  className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-zinc-200 font-serif italic text-lg focus:ring-2 focus:ring-gold outline-none appearance-none cursor-pointer"
                 >
-                  <option value="all">Todos os Temas</option>
-                  <option value="old_testament">Antigo Testamento</option>
-                  <option value="new_testament">Novo Testamento</option>
-                  <option value="characters">Personagens</option>
-                  <option value="miracles">Milagres</option>
-                  <option value="parables">Parábolas</option>
-                  <option value="books">Livros (Geral)</option>
-                  <option value="Gênesis">Gênesis</option>
-                  <option value="Êxodo">Êxodo</option>
-                  <option value="Salmos">Salmos</option>
-                  <option value="Provérbios">Provérbios</option>
-                  <option value="Isaías">Isaías</option>
-                  <option value="Mateus">Mateus</option>
-                  <option value="Marcos">Marcos</option>
-                  <option value="Lucas">Lucas</option>
-                  <option value="João">João</option>
-                  <option value="Apocalipse">Apocalipse</option>
+                  <option value="all" className="bg-premium-black">Todos os Temas</option>
+                  <option value="old_testament" className="bg-premium-black">Antigo Testamento</option>
+                  <option value="new_testament" className="bg-premium-black">Novo Testamento</option>
+                  <option value="characters" className="bg-premium-black">Personagens</option>
+                  <option value="miracles" className="bg-premium-black">Milagres</option>
+                  <option value="parables" className="bg-premium-black">Parábolas</option>
+                  <option value="books" className="bg-premium-black">Livros (Geral)</option>
+                  <option value="Gênesis" className="bg-premium-black">Gênesis</option>
+                  <option value="Êxodo" className="bg-premium-black">Êxodo</option>
+                  <option value="Salmos" className="bg-premium-black">Salmos</option>
+                  <option value="Provérbios" className="bg-premium-black">Provérbios</option>
+                  <option value="Isaías" className="bg-premium-black">Isaías</option>
+                  <option value="Mateus" className="bg-premium-black">Mateus</option>
+                  <option value="Marcos" className="bg-premium-black">Marcos</option>
+                  <option value="Lucas" className="bg-premium-black">Lucas</option>
+                  <option value="João" className="bg-premium-black">João</option>
+                  <option value="Apocalipse" className="bg-premium-black">Apocalipse</option>
                 </select>
               </div>
             </motion.section>
@@ -340,17 +379,20 @@ export default function MatchSetup() {
             <motion.section 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              className="space-y-3"
+              className="space-y-4"
             >
-              <h3 className="text-indigo-600 font-semibold px-1">Pontuação Alvo</h3>
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+              <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+                <Trophy size={18} />
+                <span>Pontuação Alvo</span>
+              </div>
+              <div className="glass-premium rounded-[2rem] border border-white/10 p-8 shadow-xl">
                 <NumberControl
                   label={
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <Trophy size={16} />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                        <Trophy size={24} />
                       </div>
-                      <span className="font-medium text-slate-800">Primeiro a chegar em</span>
+                      <span className="font-bold text-white tracking-tight">Primeiro a chegar em</span>
                     </div>
                   }
                   value={targetScore}
@@ -369,19 +411,22 @@ export default function MatchSetup() {
             <motion.section 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              className="space-y-3"
+              className="space-y-4"
             >
-              <h3 className="text-indigo-600 font-semibold px-1">Configurações da Partida</h3>
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-8">
+              <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+                <Sliders size={18} />
+                <span>Configurações da Partida</span>
+              </div>
+              <div className="glass-premium rounded-[2rem] border border-white/10 p-8 space-y-10 shadow-xl">
                 
                 {/* Max Rounds */}
                 <NumberControl
                   label={
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <Repeat size={16} />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                        <Repeat size={24} />
                       </div>
-                      <span className="font-medium text-slate-800">Rodadas Máximas</span>
+                      <span className="font-bold text-white tracking-tight">Rodadas Máximas</span>
                     </div>
                   }
                   value={maxRounds}
@@ -392,16 +437,16 @@ export default function MatchSetup() {
                   suffix=""
                 />
 
-                <div className="h-px bg-slate-100" />
+                <div className="h-px bg-white/5" />
 
                 {/* Target Score */}
                 <NumberControl
                   label={
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <Trophy size={16} />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                        <Trophy size={24} />
                       </div>
-                      <span className="font-medium text-slate-800">Pontuação Alvo</span>
+                      <span className="font-bold text-white tracking-tight">Pontuação Alvo</span>
                     </div>
                   }
                   value={targetScore}
@@ -417,28 +462,31 @@ export default function MatchSetup() {
           )}
 
           {/* Time Limit */}
-          <section className="space-y-3">
-            <h3 className="text-indigo-600 font-semibold px-1">Limite de Tempo</h3>
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
+          <section className="space-y-4">
+            <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+              <Clock size={18} />
+              <span>Limite de Tempo</span>
+            </div>
+            <div className="glass-premium rounded-[2rem] border border-white/10 p-8 space-y-8 shadow-xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                    <Clock size={16} />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                    <Clock size={24} />
                   </div>
-                  <span className="font-medium text-slate-800">Usar limite de tempo</span>
+                  <span className="font-bold text-white tracking-tight">Usar limite de tempo</span>
                 </div>
                 <Switch checked={useTimeLimit} onChange={setUseTimeLimit} />
               </div>
 
               {useTimeLimit && (
-                <div className="pt-2 border-t border-slate-50">
+                <div className="pt-8 border-t border-white/5">
                   <NumberControl
                     label={
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                          <Hourglass size={16} />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                          <Hourglass size={24} />
                         </div>
-                        <span className="font-medium text-slate-800">Segundos</span>
+                        <span className="font-bold text-white tracking-tight">Segundos</span>
                       </div>
                     }
                     value={timeLimit}
@@ -454,28 +502,31 @@ export default function MatchSetup() {
           </section>
 
           {/* Skips per Team */}
-          <section className="space-y-3">
-            <h3 className="text-indigo-600 font-semibold px-1">Pulos por Time</h3>
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
+          <section className="space-y-4">
+            <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+              <Repeat size={18} />
+              <span>Pulos por Time</span>
+            </div>
+            <div className="glass-premium rounded-[2rem] border border-white/10 p-8 space-y-8 shadow-xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                    <Repeat size={16} />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                    <Repeat size={24} />
                   </div>
-                  <span className="font-medium text-slate-800">Permitir pular</span>
+                  <span className="font-bold text-white tracking-tight">Permitir pular</span>
                 </div>
                 <Switch checked={useSkips} onChange={setUseSkips} />
               </div>
 
               {useSkips && (
-                <div className="pt-2 border-t border-slate-50">
+                <div className="pt-8 border-t border-white/5">
                   <NumberControl
                     label={
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                          <Zap size={16} />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gold/10 text-gold flex items-center justify-center border border-gold/20 shadow-lg">
+                          <Zap size={24} />
                         </div>
-                        <span className="font-medium text-slate-800">Quantidade</span>
+                        <span className="font-bold text-white tracking-tight">Quantidade</span>
                       </div>
                     }
                     value={skipsAllowed}
@@ -491,24 +542,27 @@ export default function MatchSetup() {
           </section>
 
           {/* Team Selection */}
-          <section className="space-y-3">
-            <h3 className="text-indigo-600 font-semibold px-1">Selecionar Times ({selectedTeams.length})</h3>
+          <section className="space-y-4">
+            <div className="flex items-center gap-3 text-gold font-bold uppercase tracking-widest text-xs px-1">
+              <Trophy size={18} />
+              <span>Selecionar Times ({selectedTeams.length})</span>
+            </div>
             
             {teams.length === 0 ? (
-              <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 flex flex-col items-center text-center space-y-3">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-500">
-                  <AlertTriangle size={24} />
+              <div className="glass-premium border border-white/10 rounded-[2rem] p-8 flex flex-col items-center text-center space-y-4 shadow-xl">
+                <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center text-gold border border-gold/20 shadow-lg">
+                  <AlertTriangle size={32} />
                 </div>
-                <p className="text-orange-800 font-medium">Nenhum time criado. Crie times primeiro!</p>
+                <p className="text-zinc-300 font-serif italic text-lg">Nenhum time criado. Crie times primeiro!</p>
                 <button 
                   onClick={() => navigate('/teams')}
-                  className="text-orange-600 font-bold hover:underline text-sm"
+                  className="text-gold font-bold hover:underline text-xs uppercase tracking-widest"
                 >
                   Ir para cadastro de times
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {teams.map(team => {
                   const isSelected = selectedTeams.includes(team.id);
                   return (
@@ -516,19 +570,19 @@ export default function MatchSetup() {
                       key={team.id}
                       onClick={() => toggleTeam(team.id)}
                       className={clsx(
-                        "p-3 rounded-2xl border-2 text-left transition-all flex items-center gap-3 touch-manipulation",
+                        "p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-4 touch-manipulation group",
                         isSelected 
-                          ? "bg-indigo-50 border-indigo-500 shadow-sm" 
-                          : "bg-white border-slate-100 hover:border-indigo-200"
+                          ? "bg-gold/10 border-gold shadow-lg" 
+                          : "glass-premium border-white/10 hover:border-white/20"
                       )}
                     >
                       <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0" 
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shrink-0 border border-white/10" 
                         style={{ backgroundColor: team.color }}
                       >
                         {team.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className={clsx("font-bold truncate", isSelected ? "text-indigo-900" : "text-slate-700")}>
+                      <span className={clsx("font-bold truncate text-sm uppercase tracking-tight", isSelected ? "text-gold" : "text-zinc-300 group-hover:text-white")}>
                         {team.name}
                       </span>
                     </button>
@@ -539,14 +593,14 @@ export default function MatchSetup() {
           </section>
 
           {/* Start Button */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-20 md:static md:bg-transparent md:border-none md:p-0 md:backdrop-blur-none">
+          <div className="fixed bottom-0 left-0 right-0 p-6 glass-premium border-t border-white/10 z-20 md:static md:bg-transparent md:border-none md:p-0 md:backdrop-blur-none">
             <div className="max-w-md mx-auto">
               <button
                 onClick={handleStart}
                 disabled={selectedTeams.length === 0}
-                className="w-full bg-slate-200 text-slate-400 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 disabled:cursor-not-allowed enabled:bg-indigo-600 enabled:text-white enabled:shadow-lg enabled:hover:bg-indigo-700 transition-all active:scale-[0.98] touch-manipulation"
+                className="w-full bg-white/5 text-zinc-600 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 disabled:cursor-not-allowed enabled:bg-gold enabled:text-premium-black enabled:shadow-[0_0_30px_rgba(212,175,55,0.3)] enabled:hover:scale-[1.02] transition-all active:scale-[0.98] touch-manipulation uppercase tracking-widest"
               >
-                <Play fill="currentColor" size={20} />
+                <Play fill="currentColor" size={24} />
                 Iniciar Partida
               </button>
             </div>

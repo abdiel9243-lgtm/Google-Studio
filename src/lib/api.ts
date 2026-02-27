@@ -63,9 +63,29 @@ const setStorage = (key: string, value: any) => {
 
 // Helper for text normalization
 const normalizeText = (text: string) => {
+  const stopWords = new Set([
+    'o', 'a', 'os', 'as', 'um', 'uns', 'uma', 'umas', 
+    'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 
+    'por', 'pelo', 'pela', 'pelos', 'pelas', 'para', 
+    'que', 'quem', 'qual', 'quais', 'e', 'ou', 'mas', 'se', 'com', 'foi', 'era'
+  ]);
+
   return text.trim().toLowerCase()
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-    .replace(/\s{2,}/g, " ");
+    .split(/\s+/)
+    .filter(word => !stopWords.has(word))
+    .join(" ");
+};
+
+// Helper for calculating Jaccard Similarity (0 to 1)
+const calculateSimilarity = (str1: string, str2: string) => {
+  const set1 = new Set(normalizeText(str1).split(' '));
+  const set2 = new Set(normalizeText(str2).split(' '));
+  
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+  
+  return intersection.size / union.size;
 };
 
 // Initialize Data
@@ -73,20 +93,15 @@ const initializeData = () => {
   let storedQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []);
   
   // Filter out corrupted data, duplicates, and invalid options
-  const seenTexts = new Set<string>();
   const validQuestions: Question[] = [];
   let removedCount = 0;
 
+  // Sort by length desc to keep longer/more detailed versions if similar? 
+  // Or keep oldest? Let's keep oldest (first in array usually if not sorted by created_at)
+  // Actually storedQuestions might be mixed. Let's just iterate.
+
   for (const q of storedQuestions) {
     if (!q || !q.text || !q.id) {
-      removedCount++;
-      continue;
-    }
-
-    // Normalize text for duplicate check
-    const normalizedText = normalizeText(q.text);
-
-    if (seenTexts.has(normalizedText)) {
       removedCount++;
       continue;
     }
@@ -97,12 +112,27 @@ const initializeData = () => {
       continue;
     }
 
-    seenTexts.add(normalizedText);
+    // Check for duplicates or high similarity with already valid questions
+    const isDuplicate = validQuestions.some(validQ => {
+      // Exact match check
+      if (normalizeText(validQ.text) === normalizeText(q.text)) return true;
+      
+      // Similarity check (e.g., > 0.85 considered duplicate context)
+      if (calculateSimilarity(validQ.text, q.text) > 0.85) return true;
+
+      return false;
+    });
+
+    if (isDuplicate) {
+      removedCount++;
+      continue;
+    }
+
     validQuestions.push(q);
   }
   
   if (removedCount > 0) {
-    console.warn(`Removed ${removedCount} invalid/duplicate questions from storage.`);
+    console.warn(`Removed ${removedCount} invalid/duplicate/similar questions from storage.`);
     storedQuestions = validQuestions;
     setStorage(STORAGE_KEYS.QUESTIONS, storedQuestions);
   }
@@ -122,13 +152,17 @@ const initializeData = () => {
   }
 
   // 2. Sync new questions from initialQuestions (if any)
-  // This runs every time to ensure updates to the file are reflected
-  // We re-check against the cleaned storedQuestions
-  const currentStoredTexts = new Set(storedQuestions.map(q => normalizeText(q.text)));
   const questionsToAdd: Question[] = [];
 
   for (const q of initialQuestions) {
-    if (!currentStoredTexts.has(normalizeText(q.text))) {
+    // Check against current valid questions
+    const isDuplicate = storedQuestions.some(storedQ => {
+       if (normalizeText(storedQ.text) === normalizeText(q.text)) return true;
+       if (calculateSimilarity(storedQ.text, q.text) > 0.85) return true;
+       return false;
+    });
+
+    if (!isDuplicate) {
       questionsToAdd.push({
         ...q,
         id: uuidv4(),
@@ -183,8 +217,14 @@ export const api = {
     }
 
     const normalizedNewText = normalizeText(question.text);
-    if (questions.some(q => normalizeText(q.text) === normalizedNewText)) {
-      throw new Error('Já existe uma pergunta idêntica no banco de dados.');
+    const isDuplicate = questions.some(q => {
+      if (normalizeText(q.text) === normalizedNewText) return true;
+      if (calculateSimilarity(q.text, question.text) > 0.85) return true;
+      return false;
+    });
+
+    if (isDuplicate) {
+      throw new Error('Já existe uma pergunta idêntica ou muito similar no banco de dados.');
     }
 
     const newQuestion = { ...question, id: uuidv4(), created_at: new Date().toISOString() };
@@ -206,8 +246,15 @@ export const api = {
       }
 
       const normalizedNewText = normalizeText(updatedQuestion.text);
-      if (questions.some(q => q.id !== id && normalizeText(q.text) === normalizedNewText)) {
-        throw new Error('Já existe uma pergunta idêntica no banco de dados.');
+      const isDuplicate = questions.some(q => {
+        if (q.id === id) return false; // Skip self
+        if (normalizeText(q.text) === normalizedNewText) return true;
+        if (calculateSimilarity(q.text, updatedQuestion.text) > 0.85) return true;
+        return false;
+      });
+
+      if (isDuplicate) {
+        throw new Error('Já existe uma pergunta idêntica ou muito similar no banco de dados.');
       }
 
       questions[index] = updatedQuestion;
@@ -316,6 +363,7 @@ export const api = {
       Each question MUST have 4 options.
       Ensure questions are factually accurate according to the Bible.
       Avoid very common or repetitive questions. Try to find interesting facts.
+      IMPORTANT: Do NOT generate questions that are very similar to each other or to common questions like "Who built the ark?" or "Who was swallowed by a fish?".
       
       Return a JSON array with this schema:
       [
@@ -350,7 +398,6 @@ export const api = {
       const newQuestions = JSON.parse(jsonStr);
       
       const currentQuestions = getStorage<Question[]>(STORAGE_KEYS.QUESTIONS, []).filter(q => q && q.text);
-      const currentTexts = new Set(currentQuestions.map(q => normalizeText(q.text)));
       let addedCount = 0;
       
       for (const q of newQuestions) {
@@ -361,13 +408,18 @@ export const api = {
 
         // Validation: Check duplicates
         const normalizedText = normalizeText(q.text);
-        if (!currentTexts.has(normalizedText)) {
+        const isDuplicate = currentQuestions.some(storedQ => {
+          if (normalizeText(storedQ.text) === normalizedText) return true;
+          if (calculateSimilarity(storedQ.text, q.text) > 0.85) return true;
+          return false;
+        });
+
+        if (!isDuplicate) {
           currentQuestions.unshift({
             ...q,
             id: uuidv4(),
             created_at: new Date().toISOString()
           });
-          currentTexts.add(normalizedText);
           addedCount++;
         }
       }

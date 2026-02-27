@@ -658,34 +658,6 @@ export const initialQuestions = [
     "reference": "Mateus 1:23"
   },
   {
-    "text": "Quem foi o homem mais velho da Bíblia?",
-    "type": "multiple_choice",
-    "difficulty": "medium",
-    "category": "characters",
-    "correct_answer": "Matusalém",
-    "options": [
-      "Noé",
-      "Adão",
-      "Matusalém",
-      "Sete"
-    ],
-    "reference": "Gênesis 5:27"
-  },
-  {
-    "text": "Qual profeta foi engolido por um peixe?",
-    "type": "multiple_choice",
-    "difficulty": "easy",
-    "category": "old_testament",
-    "correct_answer": "Jonas",
-    "options": [
-      "Joel",
-      "Jonas",
-      "Amós",
-      "Miqueias"
-    ],
-    "reference": "Jonas 1:17"
-  },
-  {
     "text": "Quem foi a primeira mulher criada por Deus?",
     "type": "multiple_choice",
     "difficulty": "easy",
@@ -4142,19 +4114,5 @@ export const initialQuestions = [
       "Saul"
     ],
     "reference": "Êxodo 9:12"
-  },
-  {
-    "text": "Qual o nome do lugar onde Jesus foi rejeitado?",
-    "type": "multiple_choice",
-    "difficulty": "medium",
-    "category": "new_testament",
-    "correct_answer": "Nazaré",
-    "options": [
-      "Cafarnaum",
-      "Nazaré",
-      "Belém",
-      "Jerusalém"
-    ],
-    "reference": "Lucas 4:29"
   }
 ];
